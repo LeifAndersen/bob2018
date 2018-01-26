@@ -188,7 +188,7 @@
                                      (cloud (* w 2/3) h "forest green" #:style '(square wide)))
                                     (cloud w h "forest green" #:style '(square wide))))]))
 (define mlt-block (new block%
-                       [label "MLT"]
+                       [label "OpenGL"]
                        [shape (λ (w h)
                                 (vr-append
                                  (* h -1/3)

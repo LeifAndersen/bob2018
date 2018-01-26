@@ -7,6 +7,7 @@
          slideshow/staged-slide
          slideshow/play
          slideshow/code
+         slideshow/repl
          ppict/pict
          (only-in ppict/slideshow pslide-base-pict)
          ppict/slideshow2
@@ -15,6 +16,7 @@
          "assets.rkt"
          "logo.rkt"
          "demo.rkt"
+         "elabdemo.rkt"
          "utils.rkt"
          "block.rkt"
          "character.rkt"
@@ -96,6 +98,9 @@
            (or (and (at/after end)
                     cite)
                (blank 1)))))
+
+;; ===================================================================================================
+;; Section 1: Video the Language
 
 (slide
  (mt "Movies as Programs")
@@ -471,9 +476,40 @@ The problem is that this was a conference, not just one talk. So I still had
 (slide
  (mk-demo (video:clip "res/bbb/mosaic.mp4")))
 
+;; ===================================================================================================
+;; Section 2: Towers of Languages
+
 (slide
  (mt "Movies as Programs:")
- (mt "The Story of a Racket"))
+ (mt "A Tower of Languages"))
+
+(let ()
+  (define v (send video-block draw 600 100))
+  (define m (send mlt-block draw 250 100))
+  (define f (send ffmpeg-block draw 250 100))
+  (define t
+    (freeze
+     (ppict-do (blank 900 700)
+               #:go (coord 0.5 0.65 'cc)
+               (scale ffi-cloud 1.7)
+               #:go (coord 0.3 0.35 'cc)
+               (scale (rotate doc-cloud (* pi 1/6)) 1.2)
+               #:go (coord 0.75 0.4 'cc)
+               (scale type-cloud 1.55))))
+  (play-n
+   #:steps 20
+   #:delay 0.01
+   #:skip-first? #t
+   (λ (n1 n2)
+     (ppict-do (blank 600 600)
+               #:go (coord 3/4 n1 'cb)
+               (if (= n1 0) (ghost f) f)
+               #:go (coord 1/4 n1 'cb)
+               (if (= n1 0) (ghost m) m)
+               #:go (coord 1/2 (* n1 1/6) 'cb)
+               (if (= n1 0) (ghost v) v)
+               #:go (coord 1/2 1/2)
+               (cellophane t n2)))))
 
 (mk-tower-slide)
 
@@ -648,8 +684,213 @@ The problem is that this was a conference, not just one talk. So I still had
     rename-out
     def-syntax)))
 
+;; ===================================================================================================
+;; Section 3: Implementing a Language
+
+(start-at-recent-slide)
+
 (slide
- (mk-video-tower))
+ (freeze (scale (bitmap "res/lang-as-lib.png") 0.4)))
+
+(slide
+ (freeze (scale (bitmap "res/fear-of-macros.png") 0.7)))
+
+(slide
+ (freeze (scale (bitmap "res/want-it-when.png") 0.5)))
+
+(make-repl-slide
+ #'(define (or a b)
+     (if a a b)))
+
+(make-repl-slide
+ #'(define-macro (or a b)
+     `(let ([tmp ,a])
+        (if tmp tmp ,b))))
+
+(make-repl-slide
+ #'(define-macro (or a b)
+     (define tmp (gensym))
+     `(let ([,tmp ,a])
+        (if ,tmp ,tmp ,b))))
+
+(make-repl-slide
+ #'(define-simple-macro (or a b)
+     (let ([tmp a])
+       (if tmp tmp b))))
+
+(let ()
+  (define lazy-app
+    (code
+     (define-simple-macro (lazy-app rator rand ...)
+       (lazy (#%app rator (lazy rand) ...)))))
+  (define renamer
+    (code
+     (provide
+      (except-out (all-from-out racket/base #%app))
+      (rename-out [lazy-app #%app]))))
+  (staged [app prov]
+          (slide
+           (vl-append
+            25
+            (codeblock-pict "#lang racket")
+            (if (at/after prov) renamer (ghost renamer))
+            lazy-app))))
+
+(make-repl-only-slide
+ '(module foo racket
+    (define-syntax-rule (~app a b ...)
+      (lazy (#%app a (lazy b) ...)))
+    (provide (rename-out [~app #%app])))
+ '(require 'foo))
+
+(slide
+ (code
+  ... (rename-out [lazy-modbeg #%module-begin]) ... 
+  (define-syntax lazy-modbeg
+    (make-wrapping-module-begin
+     #'force #'#%module-begin))))
+
+(let ()
+  (define strictify
+    (code
+     (define (strictify f)
+       (lambda args
+         (apply f (map force args))))))
+  (define str+
+    (code
+     (define strict-+ (stricty +))))
+  (staged [s s+]
+          (slide
+           (vl-append
+            25
+            strictify
+            (if (at/after s+) str+ (ghost str+))))))
+
+(make-repl-only-slide
+ '(module foo racket
+    (define-syntax-rule (~app a b ...)
+      (#%app a (lazy b) ...))
+    (define (strictify f)
+      (lambda args
+        (apply f (map force args))))
+    (define strict-+ (strictify +))
+    (provide (rename-out [~app #%app]
+                         [strict-+ +])))
+ '(require 'foo))
+
+;; ===================================================================================================
+;; Section 4: Video, the tower
+
+(slide
+ (mk-video-tower #:render-sp #f
+                 #:render-ffi #f
+                 #:render-video #t
+                 #:render-ts #f
+                 #:render-tv #f
+                 #:render-scribble #f
+                 #:render-viddoc #f
+                 #:render-top #f))
+
+(slide
+ (scale ffi-cloud 2))
+
+(pslide #:go (coord 1/2 1/3 'cc)
+        video-architecture)
+
+(let ()
+  (define av-frame-get-buffer
+    (let ()
+      (define x (code av-frame-get-buffer))
+      (cc-superimpose
+       (colorize (filled-rectangle (+ (pict-width x) 5)
+                                   (+ (pict-height x) 5))
+                 "yellow")
+       x)))
+  (define mlt-ffi-code
+    (scale
+     (parameterize ([code-italic-underscore-enabled #f])
+       (code (define-ffmpeg #,av-frame-get-buffer
+               (_fun [frame : _av-frame] [align : _int]
+                     -> [ret : _int]
+                     -> (maybe-error? ret)))))
+    1.2))
+  (define mlt-ffi-short-code
+    (scale
+     (code (define-mlt mlt-factory-init ...)
+           (define-mlt mlt-factory-close ...))
+     1.2))
+  (staged [c r]
+          (pslide
+           #:go (coord 1/2 0.1 'cc)
+           (t "An FFI DSL")
+           #:go (coord 0.37 0.275 'cc)
+           (colorize (filled-rectangle 425 40) "yellow")
+           #:go (coord 1/2 1/2 'cc)
+           (scale (codeblock-pict #:keep-lang-line? #f @~a{
+#lang scribble/base
+int av_frame_get_buffer(AVFrame *frame,
+                        int align);})
+                  1.1)
+           (blank 100)
+           (if (at/after r) mlt-ffi-code (ghost mlt-ffi-code))
+           #:go (coord 1 1 'rb)
+           (st "(Scheme Wrksp., 2004)")))
+  (pslide
+   #:go (coord 1/2 0.1 'cc)
+   (t "An Object DSL")
+   #:go (coord 1/2 1/2 'cc)
+   mlt-ffi-short-code
+   (blank 100)
+   (scale
+    (code
+     (define-constructor clip video
+       ... mlt-factory-init ...
+           mlt-factory-close ...))
+    1.2)))
+
+(slide
+ (mk-video-tower #:render-sp #f
+                 #:render-scribble #f
+                 #:render-ts #f
+                 #:render-tv #f
+                 #:render-viddoc #f
+                 #:render-top #f))
+
+(slide
+ (scale doc-cloud 1.5))
+
+(let ()
+  (define scrib
+            (scale (codeblock-pict #:keep-lang-line? #f @~a|{
+#lang scribble/manual
+#lang video/documentation
+@title{Video: The Language}
+@(defmodulelang video)
+
+Video Language (or VidLang, sometimes referred
+to as just Video) is a DSL for editing...videos.
+It aims to merge the capabilities of a traditional}|)
+         0.80))
+  (staged [d c]
+          (pslide
+           #:go (coord 1/2 0.01 'ct)
+           (st* "A Documentation DSL")
+           #:go (coord 1/2 1/2 'cc)
+           (vc-append
+            60
+            (scale (bitmap "res/docs.png") 0.6)
+            (if (at/after c) scrib (ghost scrib)))
+           #:go (coord 1 1 'rb)
+           (st "(ICFP, 2009)"))))
+
+(slide
+ (mk-video-tower #:render-sp #f
+                 #:render-ts #f
+                 #:render-tv #f
+                 #:render-top #f))
+
+(slide
+ (scale type-cloud 2))
 
 (play-n
  #:steps 20
@@ -698,10 +939,21 @@ The problem is that this was a conference, not just one talk. So I still had
            (blank 100)
            (if (at/after code1) c1 (ghost c1))
            #:go (coord 1 1 'rb)
-           (st "(POPL, 2016)"))))
+           (st "(POPL, 2017)"))))
 
 (slide
- (mk-video-tower))
+ (mk-video-tower #:render-sp #f
+                 #:render-top #f))
+
+(make-a-dsl-slide "DSL"
+                  #:slogan 'syntax-parse
+                  #:cite (st "(ICFP, 2010)"))
+
+(slide
+ (mk-video-tower #:render-top #f))
+
+;; ===================================================================================================
+;; Section 5: The future, editor-oriented programming
 
 (slide
  (mt "The Future..."))
@@ -774,5 +1026,8 @@ The problem is that this was a conference, not just one talk. So I still had
 
 (slide
  (scale (bitmap "res/vidgui2.png") 0.8))
+
+(slide
+ (mk-video-tower))
 
 (end-slide)

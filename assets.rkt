@@ -621,3 +621,50 @@
                     x cc-find
                     #:label (rotate (t "Layers") (* pi 1/2))
                     #:line-width 5)))
+
+(define video-architecture
+  (let ()
+    (define src (file-icon 100 120 "bisque"))
+    (define v-ir (bitmap (text-icon "V" (make-font #:weight 'bold )
+                                    #:height 80
+                                    #:color "red")))
+    (define ffmpeg (freeze (scale (bitmap "res/ffmpeg.png") 0.05)))
+    (define runtime (desktop-machine 1 '(binary)))
+    (define out (filled-rectangle 100 100))
+    (ppict-do (blank 1000 700)
+              #:go (coord 0.1 0.4 'cc)
+              src
+              #:go (coord 0.05 0.5 'lt)
+              (rotate (st* "Source File") (* pi -1/4))
+              #:go (coord 0.3 0.4 'cc)
+              v-ir
+              #:go (coord 0.25 0.5 'lt)
+              (rotate (st* "Video Data Structure") (* pi -1/4))
+              #:go (coord 0.5 0.4 'cc)
+              ffmpeg
+              #:go (coord 0.45 0.5 'lt)
+              (rotate (st* "FFmpeg Filter Graph") (* pi -1/4))
+              #:go (coord 0.7 0.4 'cc)
+              runtime
+              #:go (coord 0.65 0.5 'lt)
+              (rotate (st* "Runtime") (* pi -1/4))
+              #:go (coord 0.9 0.4 'cc)
+              out
+              #:go (coord 0.85 0.5 'lt)
+              (rotate (st* "Output") (* pi -1/4))
+              #:set (pin-arrow-line 20 ppict-do-state
+                                    src rc-find
+                                    v-ir lc-find
+                                    #:line-width 5)
+              #:set (pin-arrow-line 20 ppict-do-state
+                                    v-ir rc-find
+                                    ffmpeg lc-find
+                                    #:line-width 5)
+              #:set (pin-arrow-line 20 ppict-do-state
+                                    ffmpeg rc-find
+                                    runtime lc-find
+                                    #:line-width 5)
+              #:set (pin-arrow-line 20 ppict-do-state
+                                    runtime rc-find
+                                    out lc-find
+                                    #:line-width 5))))
