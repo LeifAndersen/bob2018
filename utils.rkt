@@ -45,6 +45,9 @@
 (define (mt str)
   (text str font 100))
 
+(define (mlt* str)
+  (text str font 110))
+
 (define (mlt str)
   (text str font 130))
 

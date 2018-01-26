@@ -687,16 +687,8 @@ The problem is that this was a conference, not just one talk. So I still had
 ;; ===================================================================================================
 ;; Section 3: Implementing a Language
 
-(start-at-recent-slide)
-
 (slide
  (freeze (scale (bitmap "res/lang-as-lib.png") 0.4)))
-
-(slide
- (freeze (scale (bitmap "res/fear-of-macros.png") 0.7)))
-
-(slide
- (freeze (scale (bitmap "res/want-it-when.png") 0.5)))
 
 (make-repl-slide
  #'(define (or a b)
@@ -743,12 +735,80 @@ The problem is that this was a conference, not just one talk. So I still had
     (provide (rename-out [~app #%app])))
  '(require 'foo))
 
+(staged [none high]
+        (define ds (code define-syntax))
+        (define def-stx
+          (if (at/after high)
+              (cc-superimpose (colorize (filled-rectangle (pict-width ds) (- (pict-height ds) 3))
+                                        "yellow")
+                              ds)
+              ds))
+        (slide
+         (code
+          ... (rename-out [lazy-modbeg #%module-begin]) ... 
+          (#,def-stx lazy-modbeg
+            (make-wrapping-module-begin
+             #'force #'#%module-begin)))))
+
 (slide
- (code
-  ... (rename-out [lazy-modbeg #%module-begin]) ... 
-  (define-syntax lazy-modbeg
-    (make-wrapping-module-begin
-     #'force #'#%module-begin))))
+ (scale (code define-syntax) 3))
+
+(play-n
+ #:steps 20
+ #:delay 0.025
+ (λ (n1 n2 n3 n4)
+   (vc-append
+    20
+    (scale
+     (cellophane
+      (scale
+       (vc-append
+        25
+        (disk 25)
+        (blank 5)
+        (disk 25)
+        (blank 5)
+        (disk 25)
+        (mlt* "Phase 3")
+        (mlt* "Phase 2"))
+       (max 0.01 (* 0.8 n3)))
+      n3)
+     (- 1 (* n4 0.4)))
+    (scale
+     (scale
+      (cc-superimpose
+       (cellophane (scale (mlt* "Compile Time") (max 0.01 (- 1 n2)) 1)
+                   (- 1 n2))
+       (cellophane (scale (mlt* "Phase 1") (max 0.01 n2) 1)
+                   n2))
+      (- 1 (* 0.2 n3)))
+     (- 1 (* n4 0.4)))
+    (scale
+     (scale
+      (cc-superimpose
+       (cellophane (scale (mlt* "Run Time") (max 0.01 (- 1 n1)) 1)
+                   (- 1 n1))
+       (cellophane (scale (mlt* "Phase 0") (max 0.01 n1) 1)
+                   n1))
+      (- 1 (* 0.2 n3)))
+     (- 1 (* n4 0.4)))
+    (cellophane
+      (scale
+       (vc-append
+        25
+        (mlt* "Phase -1")
+        (mlt* "Phase -2")
+        (disk 25)
+        (blank 5)
+        (disk 25)
+        (blank 5)
+        (disk 25))
+       (max 0.01 (* 0.8 0.6 n4)))
+      n4)
+    )))
+
+(slide
+ (freeze (scale (bitmap "res/want-it-when.png") 0.45)))
 
 (let ()
   (define strictify
@@ -777,6 +837,9 @@ The problem is that this was a conference, not just one talk. So I still had
     (provide (rename-out [~app #%app]
                          [strict-+ +])))
  '(require 'foo))
+
+(slide
+ (freeze (scale (bitmap "res/fear-of-macros.png") 0.7)))
 
 ;; ===================================================================================================
 ;; Section 4: Video, the tower
@@ -1028,6 +1091,45 @@ It aims to merge the capabilities of a traditional}|)
  (scale (bitmap "res/vidgui2.png") 0.8))
 
 (slide
+ (mt "Editor-Oriented")
+ (mlt "Programming"))
+
+(slide
+ (scale (code begin-for-editor) 2)
+ (scale (code define-editor) 2))
+
+(slide
+ (vl-append
+  25
+  (codeblock-pict
+   "#lang editor")
+  (code (define-editor video-editor ...))
+  (code ...)
+  (hb-append
+   (codeblock-pict #:keep-lang-line? #f "#lang racket\n(play ")
+   (interactive (blank 650 350)
+                (λ (frame)
+                  (define editor
+                    (new video-editor%
+                         [track-height 100]
+                         [initial-tracks 3]))
+                  (define vt (new video-text%))
+                  (send vt insert "(clip \"talk.mp4\")")
+                  (define vt2 (new video-text%))
+                  (send vt2 insert "(clip \"logo.png\")")
+                  (send editor insert-video vt 0 0 400)
+                  (send editor insert-video vt2 1 0 100)
+                  (define canvis
+                    (new editor-canvas%
+                         [parent frame]
+                         [editor editor]))
+                  (λ () (void))))
+   (codeblock-pict #:keep-lang-line? #f "#lang racket\n)"))))
+ 
+(slide
  (mk-video-tower))
+
+(slide
+ (freeze (scale (bitmap "res/beautiful-racket.png") 0.5)))
 
 (end-slide)
