@@ -1,6 +1,7 @@
 #lang at-exp slideshow
 
-(require (prefix-in video: video/base)
+(require (for-syntax syntax/parse)
+         (prefix-in video: video/base)
          video/private/editor
          pict/color
          racket/gui/base
@@ -98,6 +99,65 @@
            (or (and (at/after end)
                     cite)
                (blank 1)))))
+
+(define-syntax (make-phase-slide stx)
+  (syntax-parse stx
+    [(_ (args ...) (def val) ...)
+     #:with (stripped-args ...) (datum->syntax #f (syntax->datum #'(args ...)))
+     #:with (stripped-def ...) (datum->syntax #f (syntax->datum #'(def ...)))
+     #'(play-n
+        #:steps 20
+        #:delay 0.025
+        (λ (stripped-args ...)
+          (define stripped-def val) ...
+          (vc-append
+           20
+           (scale
+            (cellophane
+             (scale
+              (vc-append
+               25
+               (disk 25)
+               (blank 5)
+               (disk 25)
+               (blank 5)
+               (disk 25)
+               (mlt* "Phase 3")
+               (mlt* "Phase 2"))
+              (max 0.01 (* 0.8 n3)))
+             n3)
+            (- 1 (* n4 0.4)))
+           (scale
+            (scale
+             (cc-superimpose
+              (cellophane (scale (mlt* "Compile Time") (max 0.01 (- 1 n2)) 1)
+                          (- 1 n2))
+              (cellophane (scale (mlt* "Phase 1") (max 0.01 n2) 1)
+                          n2))
+             (- 1 (* 0.2 n3)))
+            (- 1 (* n4 0.4)))
+           (scale
+            (scale
+             (cc-superimpose
+              (cellophane (scale (mlt* "Run Time") (max 0.01 (- 1 n1)) 1)
+                          (- 1 n1))
+              (cellophane (scale (mlt* "Phase 0") (max 0.01 n1) 1)
+                          n1))
+             (- 1 (* 0.2 n3)))
+            (- 1 (* n4 0.4)))
+           (cellophane
+            (scale
+             (vc-append
+              25
+              (mlt* "Phase -1")
+              (mlt* "Phase -2")
+              (disk 25)
+              (blank 5)
+              (disk 25)
+              (blank 5)
+              (disk 25))
+             (max 0.01 (* 0.8 0.6 n4)))
+            n4))))]))
 
 ;; ===================================================================================================
 ;; Section 1: Video the Language
@@ -753,59 +813,73 @@ The problem is that this was a conference, not just one talk. So I still had
 (slide
  (scale (code define-syntax) 3))
 
-(play-n
- #:steps 20
- #:delay 0.025
- (λ (n1 n2 n3 n4)
-   (vc-append
-    20
-    (scale
-     (cellophane
-      (scale
-       (vc-append
-        25
-        (disk 25)
-        (blank 5)
-        (disk 25)
-        (blank 5)
-        (disk 25)
-        (mlt* "Phase 3")
-        (mlt* "Phase 2"))
-       (max 0.01 (* 0.8 n3)))
-      n3)
-     (- 1 (* n4 0.4)))
-    (scale
-     (scale
-      (cc-superimpose
-       (cellophane (scale (mlt* "Compile Time") (max 0.01 (- 1 n2)) 1)
-                   (- 1 n2))
-       (cellophane (scale (mlt* "Phase 1") (max 0.01 n2) 1)
-                   n2))
-      (- 1 (* 0.2 n3)))
-     (- 1 (* n4 0.4)))
-    (scale
-     (scale
-      (cc-superimpose
-       (cellophane (scale (mlt* "Run Time") (max 0.01 (- 1 n1)) 1)
-                   (- 1 n1))
-       (cellophane (scale (mlt* "Phase 0") (max 0.01 n1) 1)
-                   n1))
-      (- 1 (* 0.2 n3)))
-     (- 1 (* n4 0.4)))
-    (cellophane
-      (scale
-       (vc-append
-        25
-        (mlt* "Phase -1")
-        (mlt* "Phase -2")
-        (disk 25)
-        (blank 5)
-        (disk 25)
-        (blank 5)
-        (disk 25))
-       (max 0.01 (* 0.8 0.6 n4)))
-      n4)
-    )))
+(make-phase-slide ()
+                  (n1 0)
+                  (n2 0)
+                  (n3 0)
+                  (n4 0))
+
+(slide
+ (scale
+   (codeblock-pict #:keep-lang-line? #f @~a{
+ #lang scribble/text
+ #lang racket/base
+ ... run time code A ...
+ (begin-for-syntax
+   ... compile time code C ...)
+ ... run time code B ...))})
+  1.4))
+
+(slide
+ (scale (code (define-syntax id expr)) 2)
+ (blank 100)
+ (hc-append (scale (code id) 1.5) (t " : run time binding"))
+ (hc-append (scale (code expr) 1.5) (t " : compile time expression")))
+
+
+(slide
+ (code
+  (define-syntax lazy-modbeg
+    (make-wrapping-module-begin
+     #'force #'#%module-begin))))
+
+(slide
+ (code
+  (define-syntax lazy-modbeg
+    (λ (stx) ... body ...))))
+
+(make-phase-slide (n1 n2 n3)
+                  (n4 0))
+
+(staged [norm def]
+        (define modw
+          (code
+           (begin-for-syntax
+             (define-syntax make-wrapping-module-begin
+               (λ (stx) ...)))))
+        (slide
+         (vl-append
+          100
+          (if (at/after def) modw (ghost modw))
+          (code
+           (define-syntax lazy-modbeg
+             (make-wrapping-module-begin
+              #'force #'#%module-begin))))))
+
+(make-phase-slide (n4)
+                  (n1 1)
+                  (n2 1)
+                  (n3 1))
+
+(slide
+ (scale
+ (codeblock-pict @~a{
+ #lang racket/base
+ (provide make-wrapping-module-begin)
+ ...
+ (define-syntax
+   make-wrapping-module-begin ...)})
+ 1.3))
 
 (slide
  (freeze (scale (bitmap "res/want-it-when.png") 0.45)))
@@ -879,8 +953,8 @@ The problem is that this was a conference, not just one talk. So I still had
     1.2))
   (define mlt-ffi-short-code
     (scale
-     (code (define-mlt mlt-factory-init ...)
-           (define-mlt mlt-factory-close ...))
+     (code (define-ffmpeg av-frame-alloc ...)
+           (define-ffmpeg av-frame-free ...))
      1.2))
   (staged [c r]
           (pslide
@@ -907,8 +981,8 @@ int av_frame_get_buffer(AVFrame *frame,
    (scale
     (code
      (define-constructor clip video
-       ... mlt-factory-init ...
-           mlt-factory-close ...))
+       ... av-frame-alloc ...
+           av-frame-free ...))
     1.2)))
 
 (slide
