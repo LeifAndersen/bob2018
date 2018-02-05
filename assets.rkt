@@ -668,3 +668,11 @@
                                     runtime rc-find
                                     out lc-find
                                     #:line-width 5))))
+
+(define (rectify-pict pic color
+                      #:border-color [bc #f])
+  (cc-superimpose (filled-rectangle (pict-width pic)
+                                    (pict-height pic)
+                                    #:color color
+                                    #:border-color (or bc color))
+                  pic))

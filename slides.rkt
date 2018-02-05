@@ -770,6 +770,35 @@ The problem is that this was a conference, not just one talk. So I still had
      (let ([tmp a])
        (if tmp tmp b))))
 
+(staged [def use]
+        (define the-use
+          (code (first 42
+                       (let loop ()
+                         (loop)))
+                (code:comment "=> Infinite Loop")))
+        (slide
+         (scale
+          (vl-append
+           (codeblock-pict "#lang racket")
+           (code
+            (define (first x y) x)
+            code:blank
+            #,(if (at/after use) the-use (ghost the-use))))
+          1.4)))
+
+(slide
+ (scale
+  (vl-append
+   (rectify-pict (codeblock-pict "#lang lazy") "yellow")
+   (code
+    (define (first x y) x)
+    code:blank
+    (first 42
+           (let loop ()
+             (loop)))
+    (code:comment "=> 42")))
+  1.4))
+
 (let ()
   (define lazy-app
     (code
@@ -825,8 +854,10 @@ The problem is that this was a conference, not just one talk. So I still had
  #lang scribble/text
  #lang racket/base
  ... run time code A ...
+ 
  (begin-for-syntax
    ... compile time code C ...)
+   
  ... run time code B ...))})
   1.4))
 
@@ -1168,9 +1199,22 @@ It aims to merge the capabilities of a traditional}|)
  (mt "Editor-Oriented")
  (mlt "Programming"))
 
-(slide
- (scale (code begin-for-editor) 2)
- (scale (code define-editor) 2))
+(play-n
+ #:steps 40
+ #:delay 0.025
+ (λ (n1-2)
+   (define n1 (max 0.001 (min 1 (* n1-2 2))))
+   (define n2 (max 0.001 (- (* n1-2 2) 1)))
+   (vc-append
+    50
+    (fade-pict
+     n1
+     (scale (scale (code begin-for-syntax) 2.3) (- 1 n1) 1)
+     (scale (scale (code begin-for-editor) 2.3) n1 1))
+    (fade-pict
+     n2
+     (scale (scale (code define-syntax) 2.3) (- 1 n2) 1)
+     (scale (scale (code define-editor) 2.3) n2 1)))))
 
 (slide
  (vl-append

@@ -16,6 +16,10 @@
       (eval (syntax->datum c)))
     ns)
   (slide
+   (scale
+    (code #,c)
+    1.4))
+  (slide
    (code #,c)
    (repl-area
     #:make-namespace make-ns
