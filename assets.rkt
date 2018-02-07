@@ -20,6 +20,10 @@
          "utils.rkt"
          "tower.rkt")
 
+(define color-1 "yellow")
+(define color-2 "pink")
+(define color-3 "cyan")
+
 (define script-clock
   (bitmap (stopwatch-icon
            0 8 #:height 100)))
@@ -676,3 +680,22 @@
                                     #:color color
                                     #:border-color (or bc color))
                   pic))
+
+(define (codeblock-file file-name the-code)
+  (define file-name* (st file-name))
+  (define the-code* (if (string? the-code)
+                        (codeblock-pict the-code)
+                        the-code))
+  (bitmap
+   (pict->bitmap
+    (vr-append
+     (cc-superimpose
+      (rectangle (+ 40 (pict-width file-name*))
+                 (+ 15 (pict-height file-name*))
+                 #:border-width 2)
+      file-name*)
+     (cc-superimpose
+      (rectangle (+ (pict-width the-code*) 50)
+                 (+ (pict-height the-code*) 25)
+                 #:border-width 2)
+      the-code*)))))

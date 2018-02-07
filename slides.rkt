@@ -168,6 +168,14 @@
  (t "Leif Andersen"))
 
 (slide
+ (mt "Accessibility")
+ (scale (code (prominent code)) 1.5)
+ (code (some code))
+ (apply hc-append
+        (for/list ([color (list color-1 color-2 color-3)])
+          (filled-rectangle 100 100 #:color color))))
+
+(slide
  (send leif draw))
 
 #|
@@ -750,25 +758,94 @@ The problem is that this was a conference, not just one talk. So I still had
 (slide
  (freeze (scale (bitmap "res/lang-as-lib.png") 0.4)))
 
-(make-repl-slide
+(make-repl-slides
  #'(define (or a b)
-     (if a a b)))
+     (if a a b))
+ #'(or 42
+       (println "launch the missals")))
 
-(make-repl-slide
+(make-repl-slides
  #'(define-macro (or a b)
      `(let ([tmp ,a])
-        (if tmp tmp ,b))))
+        (if tmp tmp ,b)))
+ #'(begin
+     (define tmp #t)
+     (or #f tmp))
+ #:middle
+ (λ ()
+   (staged (el ev)
+     (define earrow (hc-append (t "⇒") (st " evaluates")))
+     (define e (code 42))
+     (slide
+      (vc-append
+       25
+       (code (or 42 (never-call-this)))
+       (hc-append (t "⇒") (st " elaborates"))
+       (code (let ([tmp 42])
+               (if tmp tmp (never-call-this))))
+       (if (at/after ev) earrow (ghost earrow))
+       (if (at/after ev) e (ghost e)))))))
 
-(make-repl-slide
+(make-repl-slides
  #'(define-macro (or a b)
      (define tmp (gensym))
      `(let ([,tmp ,a])
-        (if ,tmp ,tmp ,b))))
+        (if ,tmp ,tmp ,b)))
+  #'(begin
+     (define tmp #t)
+     (or #f tmp))
+ #'(begin
+     (define-macro (let asn body)
+       body)
+     (or 42 "puppy")))
 
-(make-repl-slide
+(make-repl-slides
  #'(define-simple-macro (or a b)
      (let ([tmp a])
-       (if tmp tmp b))))
+       (if tmp tmp b)))
+ #'(begin
+     (define-simple-macro (let arg body)
+       body)
+     (define tmp #t)
+     (or #f tmp)))
+
+(staged [def use exp]
+  (define lang-file
+   (codeblock-file "lang-piece.rkt" @~a{
+ #lang racket
+ (provide or)
+ (define-simple-macro (or a b)
+   (let ([tmp a])
+     (if tmp tmp b)))}))
+  (define user-file
+   (codeblock-file "user-prog.rkt" @~a{
+ #lang racket
+ (require "lang-piece.rkt"
+ (define-simple-macro (let asn body)
+   body)
+ (or #f 5)}))
+  (define exp-file
+    (codeblock-file "user-prog.rkt" @~a{
+ #lang racket
+ (require "lang-piece.rkt")
+ (define-simple-macro (let asn body)
+   body)
+ (let ([tmp #f])
+   (if tmp tmp 5))}))
+  (pslide
+   #:go (coord 0.61 0.710 'cc)
+   (if (at/after exp) (colorize (filled-rectangle 75 36) color-1) (blank))
+   #:go (coord 0.20 0.810 'cc)
+   (if (at/after exp) (colorize (filled-rectangle 75 36) color-3) (blank))
+   #:go (coord 0.3 0.33 'cc)
+   (if (at/after exp) (colorize (filled-rectangle 75 36) color-3) (blank))
+   #:go (coord 1/2 0.25 'cc)
+   lang-file
+   #:go (coord 1/2 0.5 'ct)
+   (cond
+     [(at/after exp) exp-file]
+     [(at/after use) user-file]
+     [else (blank)])))
 
 (staged [def use]
         (define the-use
@@ -822,7 +899,8 @@ The problem is that this was a conference, not just one talk. So I still had
     (define-syntax-rule (~app a b ...)
       (lazy (#%app a (lazy b) ...)))
     (provide (rename-out [~app #%app])))
- '(require 'foo))
+ '(require 'foo)
+ #:init #'(+ 1 2))
 
 (staged [none high]
         (define ds (code define-syntax))
@@ -912,6 +990,24 @@ The problem is that this was a conference, not just one talk. So I still had
    make-wrapping-module-begin ...)})
  1.3))
 
+(make-repl-only-slide
+ '(module foo racket
+    (require (for-syntax syntax/parse)
+             syntax/parse/define
+             syntax/wrap-modbeg)
+    (define-syntax #%lazy-module-begin
+      (make-wrapping-module-begin
+       #'force #'#%module-begin))
+    (define-syntax-rule (~app a b ...)
+      (lazy (#%app a (lazy b) ...)))
+    (define-syntax-rule (#%lazy-top-interaction . form)
+      (#%top-interaction . (force form)))
+    (provide (rename-out [#%lazy-module-begin #%module-begin]
+                         [#%lazy-top-interaction #%top-interaction]
+                         [~app #%app])))
+ '(require 'foo)
+ #:init #'(+ 1 2))
+ 
 (slide
  (freeze (scale (bitmap "res/want-it-when.png") 0.45)))
 
@@ -933,15 +1029,30 @@ The problem is that this was a conference, not just one talk. So I still had
 
 (make-repl-only-slide
  '(module foo racket
+    (require (for-syntax syntax/parse)
+             syntax/parse/define
+             syntax/wrap-modbeg)
+    (define-syntax #%lazy-module-begin
+      (make-wrapping-module-begin
+       #'force #'#%module-begin))
     (define-syntax-rule (~app a b ...)
-      (#%app a (lazy b) ...))
+      (lazy (#%app a (lazy b) ...)))
+    (define-syntax-rule (#%lazy-top-interaction . form)
+      (#%top-interaction . (force form)))
     (define (strictify f)
       (lambda args
         (apply f (map force args))))
     (define strict-+ (strictify +))
-    (provide (rename-out [~app #%app]
+    (provide (rename-out [#%lazy-module-begin #%module-begin]
+                         [#%lazy-top-interaction #%top-interaction]
+                         [~app #%app]
                          [strict-+ +])))
- '(require 'foo))
+ '(require 'foo)
+ #:init (list #'(+ 1 2)
+              #'((lambda (x y) x)
+                 42
+                 ((lambda (loop) (loop loop))
+                  (lambda (loop) (loop loop))))))
 
 (slide
  (freeze (scale (bitmap "res/fear-of-macros.png") 0.7)))
@@ -1116,6 +1227,33 @@ It aims to merge the capabilities of a traditional}|)
 (make-a-dsl-slide "DSL"
                   #:slogan 'syntax-parse
                   #:cite (st "(ICFP, 2010)"))
+
+(make-repl-slides
+ (quote-syntax
+  (define-syntax let
+    (λ (stx)
+      (syntax-case stx ()
+        [(let ([x expr] ...)
+           body)
+         #'((lambda (x ...) body)
+            expr ...)]))))
+ #'(let ([a 5])
+     a)
+ #'(let ([(a b c) 5])
+     a))
+
+(make-repl-slides
+ (quote-syntax
+  (define-syntax let
+    (syntax-parser
+      [(let ([x:id expr] ...)
+         body)
+       #'((lambda (x ...) body)
+          expr ...)])))
+ #'(let ([a 5])
+     a)
+ #'(let ([(a b c) 5])
+     a))
 
 (slide
  (mk-video-tower #:render-top #f))

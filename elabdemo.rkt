@@ -4,9 +4,12 @@
 (require racket/gui/base
          slideshow/repl
          slideshow/code
+         syntax/to-string
          "utils.rkt")
 
-(define (make-repl-slide c)
+(define (make-repl-slides c
+                          #:middle [middle #f]
+                          . init)
   (define (make-ns)
     (define ns (make-base-namespace))
     (parameterize ([current-namespace ns])
@@ -19,20 +22,35 @@
    (scale
     (code #,c)
     1.4))
-  (slide
-   (code #,c)
-   (repl-area
-    #:make-namespace make-ns
-    #:width 900
-    #:height 300)))
+  (when middle
+    (middle))
+  (for ([i (in-list init)])
+    (slide
+     (code #,c)
+     (apply repl-area
+            #:make-namespace make-ns
+            #:width 900
+            #:height 450
+            (if init
+                (list (string-replace (syntax->string #`(#,i)) "\n" "\n  "))
+                (list))))))
 
-(define (make-repl-only-slide . data)
-  (slide
-    (repl-area
-  #:make-namespace (λ ()
-                     (define ns (make-base-namespace))
-                     (parameterize ([current-namespace ns])
-                       (map eval data))
-                     ns)
-  #:width 900
-  #:height 600)))
+(define (make-repl-only-slide #:init [init #f]
+                              . data)
+  (define init*
+    (cond [(list? init) init]
+          [(syntax? init) (list init)]
+          [else (list)]))
+  (for ([i (in-list init*)])
+    (slide
+     (apply repl-area
+            #:make-namespace (λ ()
+                               (define ns (make-base-namespace))
+                               (parameterize ([current-namespace ns])
+                                 (map eval data))
+                               ns)
+            #:width 900
+            #:height 600
+            (if i
+                (list (string-replace (syntax->string #`(#,i)) "\n" "\n  "))
+                (list))))))
