@@ -1230,26 +1230,25 @@ It aims to merge the capabilities of a traditional}|)
 
 (make-repl-slides
  (quote-syntax
-  (define-syntax let
-    (λ (stx)
-      (syntax-case stx ()
-        [(let ([x expr] ...)
-           body)
-         #'((lambda (x ...) body)
-            expr ...)]))))
+  (define-syntax-rule
+    (let ([x e] ...)
+      body)
+    ((λ (x ...) body) e ...)))
  #'(let ([a 5])
      a)
  #'(let ([(a b c) 5])
      a))
 
 (make-repl-slides
+ #:background
+ (ppict-do ((pslide-base-pict))
+           #:go (coord 0.405 0.46 'cc)
+           (colorize (filled-rectangle 110 45) "yellow"))
  (quote-syntax
-  (define-syntax let
-    (syntax-parser
-      [(let ([x:id expr] ...)
-         body)
-       #'((lambda (x ...) body)
-          expr ...)])))
+  (define-syntax-parser let
+    [(let ([x:id e] ...)
+      body)
+     #'((λ (x ...) body) e ...)]))
  #'(let ([a 5])
      a)
  #'(let ([(a b c) 5])

@@ -2,12 +2,15 @@
 
 (provide (all-defined-out))
 (require racket/gui/base
+         ppict/pict
+         ppict/slideshow2
          slideshow/repl
          slideshow/code
          syntax/to-string
          "utils.rkt")
 
 (define (make-repl-slides c
+                          #:background [background #f]
                           #:middle [middle #f]
                           . init)
   (define (make-ns)
@@ -18,7 +21,10 @@
       (namespace-require 'racket)
       (eval (syntax->datum c)))
     ns)
-  (slide
+  (pslide
+   #:go (coord 1/2 1/2 'cc)
+   (or background (blank))
+   #:go (coord 1/2 1/2 'cc)
    (scale
     (code #,c)
     1.4))
