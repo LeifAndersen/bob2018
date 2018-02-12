@@ -313,4 +313,69 @@ ffmpeg -f lavfi -i testsrc \
    the-logo)})
 
 
+(slide
+ (code
+  (define-syntax lazy-modbeg
+    (make-wrapping-module-begin
+     #'force #'#%module-begin))))
+
+(slide
+ (code
+  (define-syntax lazy-modbeg
+    (λ (stx) ... body ...))))
+
+(make-phase-slide (n1 n2 n3)
+                  (n4 0))
+
+(staged [norm def]
+        (define modw
+          (code
+           (begin-for-syntax
+             (define-syntax make-wrapping-module-begin
+               (λ (stx) ...)))))
+        (slide
+         (vl-append
+          100
+          (if (at/after def) modw (ghost modw))
+          (code
+           (define-syntax lazy-modbeg
+             (make-wrapping-module-begin
+              #'force #'#%module-begin))))))
+
+(make-phase-slide (n4)
+                  (n1 1)
+                  (n2 1)
+                  (n3 1))
+
+(slide
+ (scale
+ (codeblock-pict @~a{
+ #lang racket/base
+ (provide make-wrapping-module-begin)
+ ...
+ (define-syntax
+   make-wrapping-module-begin ...)})
+ 1.3))
+
+(make-repl-only-slide
+ '(module foo racket
+    (require (for-syntax syntax/parse)
+             syntax/parse/define
+             syntax/wrap-modbeg)
+    (define-syntax #%lazy-module-begin
+      (make-wrapping-module-begin
+       #'force #'#%module-begin))
+    (define-syntax-rule (~app a b ...)
+      (lazy (#%app a (lazy b) ...)))
+    (define-syntax-rule (#%lazy-top-interaction . form)
+      (#%top-interaction . (force form)))
+    (provide (rename-out [#%lazy-module-begin #%module-begin]
+                         [#%lazy-top-interaction #%top-interaction]
+                         [~app #%app])))
+ '(require 'foo)
+ #:init #'(+ 1 2))
+ 
+(slide
+ (freeze (scale (bitmap "res/want-it-when.png") 0.45)))
+
 |#

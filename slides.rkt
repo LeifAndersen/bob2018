@@ -14,6 +14,7 @@
          ppict/slideshow2
          (prefix-in v: video/base)
          video/player
+         images/icons/misc
          "assets.rkt"
          "logo.rkt"
          "demo.rkt"
@@ -880,7 +881,7 @@ The problem is that this was a conference, not just one talk. So I still had
   (define lazy-app
     (code
      (define-simple-macro (lazy-app rator rand ...)
-       (lazy (#%app rator (lazy rand) ...)))))
+       (lazy (#%app rator (delay rand) ...)))))
   (define renamer
     (code
      (provide
@@ -902,41 +903,44 @@ The problem is that this was a conference, not just one talk. So I still had
  '(require 'foo)
  #:init #'(+ 1 2))
 
-(staged [none high]
-        (define ds (code define-syntax))
-        (define def-stx
-          (if (at/after high)
-              (cc-superimpose (colorize (filled-rectangle (pict-width ds) (- (pict-height ds) 3))
-                                        "yellow")
-                              ds)
-              ds))
-        (slide
-         (code
-          ... (rename-out [lazy-modbeg #%module-begin]) ... 
-          (#,def-stx lazy-modbeg
-            (make-wrapping-module-begin
-             #'force #'#%module-begin)))))
+(play-n
+ #:steps 20
+ #:delay 0.025
+ (λ (n)
+   (vc-append
+    25
+    (scale (code (+ 1 2)) 1.2)
+    (hc-append (t "⇒") (st "elaborates"))
+    (fade-around-pict
+     n
+     (scale
+      (cc-superimpose
+       (colorize (filled-rectangle 580 35) (light "orange"))
+       (code (delay (+ (delay 1) (delay 2)))))
+      1.2)
+     (λ (p)
+       (scale (code (force #,(scale p (/ 1 1.2)))) 1.2)))
+    (hc-append (t "⇒") (st "evaluates"))
+    (scale
+     (fade-pict n
+                (tt "#<promise>")
+                (code 3))
+     1.2))))
 
 (slide
  (scale (code define-syntax) 3))
-
-(make-phase-slide ()
-                  (n1 0)
-                  (n2 0)
-                  (n3 0)
-                  (n4 0))
 
 (slide
  (scale
    (codeblock-pict #:keep-lang-line? #f @~a{
  #lang scribble/text
  #lang racket/base
- ... run time code A ...
+ ... run time code ...
  
- (begin-for-syntax
-   ... compile time code C ...)
+ (define-syntax macro-name
+   ... compile time code ...)
    
- ... run time code B ...))})
+ ... run time code ...))})
   1.4))
 
 (slide
@@ -945,49 +949,22 @@ The problem is that this was a conference, not just one talk. So I still had
  (hc-append (scale (code id) 1.5) (t " : run time binding"))
  (hc-append (scale (code expr) 1.5) (t " : compile time expression")))
 
-
 (slide
  (code
+  (provide (rename-out [lazy-modbeg
+                        #%module-begin]))
   (define-syntax lazy-modbeg
-    (make-wrapping-module-begin
-     #'force #'#%module-begin))))
+    (λ (stx) ... #'(force body) ...))))
 
 (slide
- (code
-  (define-syntax lazy-modbeg
-    (λ (stx) ... body ...))))
-
-(make-phase-slide (n1 n2 n3)
-                  (n4 0))
-
-(staged [norm def]
-        (define modw
-          (code
-           (begin-for-syntax
-             (define-syntax make-wrapping-module-begin
-               (λ (stx) ...)))))
-        (slide
-         (vl-append
-          100
-          (if (at/after def) modw (ghost modw))
-          (code
-           (define-syntax lazy-modbeg
-             (make-wrapping-module-begin
-              #'force #'#%module-begin))))))
-
-(make-phase-slide (n4)
-                  (n1 1)
-                  (n2 1)
-                  (n3 1))
+ (freeze (scale (bitmap "res/want-it-when.png") 0.45)))
 
 (slide
  (scale
- (codeblock-pict @~a{
- #lang racket/base
- (provide make-wrapping-module-begin)
- ...
- (define-syntax
-   make-wrapping-module-begin ...)})
+  (code
+   (require syntax/wrapping-modbeg)
+   (define-syntax lazy-modbeg module-begin
+     (make-wrapping-module-begin ...)))
  1.3))
 
 (make-repl-only-slide
@@ -1007,9 +984,21 @@ The problem is that this was a conference, not just one talk. So I still had
                          [~app #%app])))
  '(require 'foo)
  #:init #'(+ 1 2))
- 
-(slide
- (freeze (scale (bitmap "res/want-it-when.png") 0.45)))
+
+(staged [f b]
+  (define bomb (bitmap (bomb-icon #:height 200
+                                  #:bomb-color "red")))
+  (define ev (hc-append (t "⇒") (st "evaluates")))
+  (slide
+   (vc-append
+    25
+    (scale (code (+ (delay 1) (delay 2))) 1.2)
+    (hc-append (t "⇒") (st "evaluates"))
+    (scale (codeblock-pict #:keep-lang-line? #f @~a{
+ #lang racket
+ (+ #<promise> (delay 2)}) 1.2)
+    (if (at/after b) ev (ghost ev))
+    (if (at/after b) bomb (ghost bomb)))))
 
 (let ()
   (define strictify
@@ -1019,13 +1008,15 @@ The problem is that this was a conference, not just one talk. So I still had
          (apply f (map force args))))))
   (define str+
     (code
-     (define strict-+ (stricty +))))
-  (staged [s s+]
+     (define lazy-+ (stricty +))))
+  (staged [s+]
           (slide
-           (vl-append
-            25
-            strictify
-            (if (at/after s+) str+ (ghost str+))))))
+           (scale
+            (vl-append
+             25
+             strictify
+             (if (at/after s+) str+ (ghost str+)))
+            1.3))))
 
 (make-repl-only-slide
  '(module foo racket
