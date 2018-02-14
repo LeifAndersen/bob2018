@@ -767,8 +767,7 @@ The problem is that this was a conference, not just one talk. So I still had
  #'(define-macro (or a b)
      `(let ([tmp ,a])
         (if tmp tmp ,b)))
- #'(begin
-     (define tmp #t)
+ #'(let ([tmp #t])
      (or #f tmp))
  #:middle
  (λ ()
@@ -783,16 +782,32 @@ The problem is that this was a conference, not just one talk. So I still had
        (code (let ([tmp 42])
                (if tmp tmp (never-call-this))))
        (if (at/after ev) earrow (ghost earrow))
-       (if (at/after ev) e (ghost e)))))))
+       (if (at/after ev) e (ghost e)))))
+   (staged (e1 e2 e3)
+     (define e2-arrow (hc-append (t "⇒") (st " elaborates")))
+     (define e2-code
+       (code (let ([tmp #t])
+               (let ([tmp #f])
+                 (if tmp tmp tmp)))))
+     (define e3-arrow (hc-append (t "⇒") (st " evaluates")))
+     (define e3-code (code #f))
+     (slide
+      (vc-append
+       25
+       (code (let ([tmp #t])
+               (or #f tmp)))
+       (if (at/after e2) e2-arrow (ghost e2-arrow))
+       (if (at/after e2) e2-code (ghost e2-code))
+       (if (at/after e3) e3-arrow (ghost e3-arrow))
+       (if (at/after e3) e3-code (ghost e3-code)))))))
 
 (make-repl-slides
  #'(define-macro (or a b)
      (define tmp (gensym))
      `(let ([,tmp ,a])
         (if ,tmp ,tmp ,b)))
-  #'(begin
-     (define tmp #t)
-     (or #f tmp))
+  #'(let ([tmp #t])
+      (or #f tmp))
  #'(begin
      (define-macro (let asn body)
        body)
@@ -827,7 +842,7 @@ The problem is that this was a conference, not just one talk. So I still had
     (codeblock-file "user-prog.rkt" @~a{
  #lang racket
  (require "lang-piece.rkt")
- (define-simple-macro (let asn body)
+ (define-syntax-rule (let asn body)
    body)
  (let ([tmp #f])
    (if tmp tmp 5))}))
@@ -878,7 +893,7 @@ The problem is that this was a conference, not just one talk. So I still had
 (let ()
   (define lazy-app
     (code
-     (define-simple-macro (lazy-app rator rand ...)
+     (define-syntax-rule (lazy-app rator rand ...)
        (lazy (#%app rator (delay rand) ...)))))
   (define renamer
     (code
@@ -1013,33 +1028,6 @@ The problem is that this was a conference, not just one talk. So I still had
              (if (at/after s+) str+ (ghost str+)))
             1.3))))
 
-(make-repl-only-slide
- '(module foo racket
-    (require (for-syntax syntax/parse)
-             syntax/parse/define
-             syntax/wrap-modbeg)
-    (define-syntax #%lazy-module-begin
-      (make-wrapping-module-begin
-       #'force #'#%module-begin))
-    (define-syntax-rule (~app a b ...)
-      (lazy (#%app a (lazy b) ...)))
-    (define-syntax-rule (#%lazy-top-interaction . form)
-      (#%top-interaction . (force form)))
-    (define (strictify f)
-      (lambda args
-        (apply f (map force args))))
-    (define strict-+ (strictify +))
-    (provide (rename-out [#%lazy-module-begin #%module-begin]
-                         [#%lazy-top-interaction #%top-interaction]
-                         [~app #%app]
-                         [strict-+ +])))
- '(require 'foo)
- #:init (list #'(+ 1 2)
-              #'((lambda (x y) x)
-                 42
-                 ((lambda (loop) (loop loop))
-                  (lambda (loop) (loop loop))))))
-
 ;; ===================================================================================================
 ;; Section 4: Video, the tower
 
@@ -1096,7 +1084,7 @@ int av_frame_get_buffer(AVFrame *frame,
            (blank 100)
            (if (at/after r) mlt-ffi-code (ghost mlt-ffi-code))
            #:go (coord 1 1 'rb)
-           (st "(Scheme Wrksp., 2004)")))
+           (st "(Scheme Workshop, 2004)")))
   (pslide
    #:go (coord 1/2 0.1 'cc)
    (t "An Object DSL")
@@ -1225,13 +1213,13 @@ It aims to merge the capabilities of a traditional}|)
 (make-repl-slides
  #:background
  (ppict-do ((pslide-base-pict))
-           #:go (coord 0.405 0.46 'cc)
+           #:go (coord 0.410 0.46 'cc)
            (colorize (filled-rectangle 110 45) "yellow"))
  (quote-syntax
-  (define-syntax-parser let
-    [(let ([x:id e] ...)
+  (define-simple-macro
+    (let ([x:id e] ...)
       body)
-     #'((λ (x ...) body) e ...)]))
+     ((λ (x ...) body) e ...)))
  #'(let ([a 5])
      a)
  #'(let ([(a b c) 5])
@@ -1366,8 +1354,6 @@ It aims to merge the capabilities of a traditional}|)
 
 (slide
  (mk-video-tower))
-
-(start-at-recent-slide)
 
 (pslide
  #:go (coord 0.01 0.99 'lb)
