@@ -9,6 +9,7 @@
          slideshow/play
          slideshow/code
          slideshow/repl
+         pict/shadow
          ppict/pict
          (only-in ppict/slideshow pslide-base-pict)
          ppict/slideshow2
@@ -756,9 +757,6 @@ The problem is that this was a conference, not just one talk. So I still had
 ;; ===================================================================================================
 ;; Section 3: Implementing a Language
 
-(slide
- (freeze (scale (bitmap "res/lang-as-lib.png") 0.4)))
-
 (make-repl-slides
  #'(define (or a b)
      (if a a b))
@@ -801,11 +799,11 @@ The problem is that this was a conference, not just one talk. So I still had
      (or 42 "puppy")))
 
 (make-repl-slides
- #'(define-simple-macro (or a b)
+ #'(define-syntax-rule (or a b)
      (let ([tmp a])
        (if tmp tmp b)))
  #'(begin
-     (define-simple-macro (let arg body)
+     (define-syntax-rule (let arg body)
        body)
      (define tmp #t)
      (or #f tmp)))
@@ -815,14 +813,14 @@ The problem is that this was a conference, not just one talk. So I still had
    (codeblock-file "lang-piece.rkt" @~a{
  #lang racket
  (provide or)
- (define-simple-macro (or a b)
+ (define-syntax-rule (or a b)
    (let ([tmp a])
      (if tmp tmp b)))}))
   (define user-file
    (codeblock-file "user-prog.rkt" @~a{
  #lang racket
  (require "lang-piece.rkt"
- (define-simple-macro (let asn body)
+ (define-syntax-rule (let asn body)
    body)
  (or #f 5)}))
   (define exp-file
@@ -957,9 +955,6 @@ The problem is that this was a conference, not just one talk. So I still had
     (λ (stx) ... #'(force body) ...))))
 
 (slide
- (freeze (scale (bitmap "res/want-it-when.png") 0.45)))
-
-(slide
  (scale
   (code
    (require syntax/wrapping-modbeg)
@@ -1008,7 +1003,7 @@ The problem is that this was a conference, not just one talk. So I still had
          (apply f (map force args))))))
   (define str+
     (code
-     (define lazy-+ (stricty +))))
+     (define lazy-+ (strictify +))))
   (staged [s+]
           (slide
            (scale
@@ -1044,9 +1039,6 @@ The problem is that this was a conference, not just one talk. So I still had
                  42
                  ((lambda (loop) (loop loop))
                   (lambda (loop) (loop loop))))))
-
-(slide
- (freeze (scale (bitmap "res/fear-of-macros.png") 0.7)))
 
 ;; ===================================================================================================
 ;; Section 4: Video, the tower
@@ -1371,11 +1363,24 @@ It aims to merge the capabilities of a traditional}|)
                          [editor editor]))
                   (λ () (void))))
    (codeblock-pict #:keep-lang-line? #f "#lang racket\n)"))))
- 
+
 (slide
  (mk-video-tower))
 
-(slide
- (freeze (scale (bitmap "res/beautiful-racket.png") 0.5)))
+(start-at-recent-slide)
+
+(pslide
+ #:go (coord 0.01 0.99 'lb)
+ (freeze (scale (bitmap "res/fear-of-macros.png") 0.4))
+ #:go (coord 0.99 0.01 'rt)
+ (freeze (scale (bitmap "res/beautiful-racket.png") 0.4)))
+
+(pslide
+ #:go (coord 0.01 0.01 'lt)
+ (freeze (shadow-frame (scale (bitmap "res/lang-as-lib.png") 0.3)
+                       #:margin 0))
+ #:go (coord 0.99 0.99 'rb)
+ (freeze (shadow-frame (scale (bitmap "res/want-it-when.png") 0.35)
+                       #:margin 0)))
 
 (end-slide)
