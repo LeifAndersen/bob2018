@@ -144,20 +144,20 @@
  #lang video
  ;; Create a mosaic of four videos
  (for/vertical ([i (in-range 2)])
-   (for/horizontal ([j (in-range 2)])
-     (external-video "branded.vid"
-       (clip "logo.png")
-       (clip (format "~aX~a.mp4" i j)))))}))
+ (for/horizontal ([j (in-range 2)])
+ (external-video "branded.vid"
+ (clip "logo.png")
+ (clip (format "~aX~a.mp4" i j)))))}))
 
   (define the-lib* (codeblock-pict @~a{
  #lang video/lib
  ;; Generate a branded video 
  (define-video (branded logo vid)
-   logo
-   (fade-transition 1)
-   (multitrack logo
-               (overlay 0 0 100 100)
-               vid))}))
+ logo
+ (fade-transition 1)
+ (multitrack logo
+ (overlay 0 0 100 100)
+ vid))}))
 
   (define the-code
     (bitmap
@@ -203,42 +203,42 @@
                                          'se 0 200))
 
   (staged [c cp cl cc l lc ll]
-          (pslide
-           #:go (coord 1/2 0.26 'cc)
-           (if (at cl) the-loop (blank 1))
-           #:go (coord 0.63 0.33 'cc)
-           (if (at lc) the-ext (blank 1))
-           #:go (coord 0.48 0.69 'cc)
-           (if (at lc) the-def (blank 1))
-           #:go (coord 0.5 0.38 'cc)
-           (if (or (at cc) (at l)) the-call (blank 1))
-           #:go (coord 0.53 0.40 'cc)
-           (if (or (at cp) (at cc) (at l)) the-prim (blank 1))
-           #:go (coord 0.28 0.14 'cc)
-           (if (at ll) the-lang (blank 1))
-           #:go (coord 0.28 0.59 'cc)
-           (if (at ll) the-lang (blank 1))
-           #:go (coord 1/2 1/2 'cc)
-           (vl-append
-            30
-            (scale (if (at/after c) the-code (ghost the-code)) 0.9)
-            (scale (if (at/after l) the-lib (ghost the-lib)) 0.9))
-           #:go (coord 0.41 0.68 'cc)
-           (if (at lc) func-balloon (blank 1))
-           #:go (coord 1/4 0.3 'cc)
-           (if (at cl) comp-balloon (blank 1))
-           #:go (coord 0.5 0.45 'cc)
-           (if (at cc) call-balloon (blank 1))
-           #:go (coord 3/4 0.45 'cc)
-           (if (at cp) prim-balloon (blank 1))
-           #:set (let ([p ppict-do-state])
-                   (if (at lc)
-                       (pin-arrow-line
-                        15 p
-                        the-ext cb-find
-                        the-def ct-find
-                        #:line-width 5)
-                       p)))))
+    (pslide
+     #:go (coord 1/2 0.26 'cc)
+     (if (at cl) the-loop (blank 1))
+     #:go (coord 0.63 0.33 'cc)
+     (if (at lc) the-ext (blank 1))
+     #:go (coord 0.48 0.69 'cc)
+     (if (at lc) the-def (blank 1))
+     #:go (coord 0.5 0.38 'cc)
+     (if (or (at cc) (at l)) the-call (blank 1))
+     #:go (coord 0.53 0.40 'cc)
+     (if (or (at cp) (at cc) (at l)) the-prim (blank 1))
+     #:go (coord 0.28 0.14 'cc)
+     (if (at ll) the-lang (blank 1))
+     #:go (coord 0.28 0.59 'cc)
+     (if (at ll) the-lang (blank 1))
+     #:go (coord 1/2 1/2 'cc)
+     (vl-append
+      30
+      (scale (if (at/after c) the-code (ghost the-code)) 0.9)
+      (scale (if (at/after l) the-lib (ghost the-lib)) 0.9))
+     #:go (coord 0.41 0.68 'cc)
+     (if (at lc) func-balloon (blank 1))
+     #:go (coord 1/4 0.3 'cc)
+     (if (at cl) comp-balloon (blank 1))
+     #:go (coord 0.5 0.45 'cc)
+     (if (at cc) call-balloon (blank 1))
+     #:go (coord 3/4 0.45 'cc)
+     (if (at cp) prim-balloon (blank 1))
+     #:set (let ([p ppict-do-state])
+             (if (at lc)
+                 (pin-arrow-line
+                  15 p
+                  the-ext cb-find
+                  the-def ct-find
+                  #:line-width 5)
+                 p)))))
 
 (define (the-landscape-slide)
   (define no (scale-to-fit (face 'unhappy) 75 75))
@@ -254,32 +254,32 @@
                    #:make-bitmap make-monochrome-bitmap)))
 
   (staged [tab plug mac script]
-          (pslide
-           #:go (coord 1/2 0.05 'ct)
-           (mt "The Landscape")
-           #:go (coord 1/2 0.45 'cc)
-           (filled-rectangle 950 5)
-           #:go (coord 0.33 0.6 'cc)
-           (filled-rectangle 5 400)
-           #:go (coord 1/2 0.6 'cc)
-           (table
-            3
-            (list (t* "Tool") (t* "Example") (t* "Experience")
-                  (t "Plugin-Ins")
-                  pexample
-                  (if (at/after plug) no (ghost no))
+    (pslide
+     #:go (coord 1/2 0.05 'ct)
+     (mt "The Landscape")
+     #:go (coord 1/2 0.45 'cc)
+     (filled-rectangle 950 5)
+     #:go (coord 0.33 0.6 'cc)
+     (filled-rectangle 5 400)
+     #:go (coord 1/2 0.6 'cc)
+     (table
+      3
+      (list (t* "Tool") (t* "Example") (t* "Experience")
+            (t "Plugin-Ins")
+            pexample
+            (if (at/after plug) no (ghost no))
 
-                  (vc-append (t "UI Automation")
-                             (st "(Macros)"))
-                  mexample
-                  (if (at/after mac) no! (ghost no!))
+            (vc-append (t "UI Automation")
+                       (st "(Macros)"))
+            mexample
+            (if (at/after mac) no! (ghost no!))
 
-                  (t "Shell Scripts")
-                  sexample
-                  (if (at/after script) no!!! (ghost no!!!)))
-            (list* lc-superimpose cc-superimpose)
-            cc-superimpose
-            50 25))))
+            (t "Shell Scripts")
+            sexample
+            (if (at/after script) no!!! (ghost no!!!)))
+      (list* lc-superimpose cc-superimpose)
+      cc-superimpose
+      50 25))))
 
 (define make-a-dsl
   (let ()
@@ -349,15 +349,15 @@
         (if rt2 t2* (ghost t2*)))))))
   (if pre-slash
       (staged [title2 rt2 rt2h]
-              (mk-slide (at/after title2)
-                        (at/after rt2)
-                        (at/after rt2h)
-                        to-highlight))
+        (mk-slide (at/after title2)
+                  (at/after rt2)
+                  (at/after rt2h)
+                  to-highlight))
       (staged [rt2 rt2h]
-              (mk-slide #f
-                        (at/after rt2)
-                        (at/after rt2h)
-                        to-highlight))))
+        (mk-slide #f
+                  (at/after rt2)
+                  (at/after rt2h)
+                  to-highlight))))
 
 (define linguistic-inheritance
   (vc-append
@@ -404,109 +404,109 @@
                    'e 100 0)))
   (define (mk-slide inh us pass blk new chng)
     (define at/after values)
-          (pslide
-           #:go (coord 0.05 0.05 'lt)
-           (if (at/after inh) linguistic-inheritance (ghost linguistic-inheritance))
-           #:go (coord 4/5 1/2 'cc)
-          (ppict-do (blank 400 700)
-                    #:go (coord 1/2 0 'ct)
-                    (if (at/after us) user (ghost user))
-                    #:go (coord 1/2 1/2 'cc)
-                    (if (at/after us) impl (ghost impl))
-                    #:go (coord 1/2 1 'cb)
-                    (if (at/after us) base (ghost base))
-                    #:set (let ([p ppict-do-state])
-                            (if (at/after pass)
-                                (pin-arrow-line
-                                 20 p
-                                 base (λ (a b)
-                                        (let-values ([(x y) (lt-find a b)])
-                                          (values (+ x 50) y)))
-                                 user (λ (a b)
-                                        (let-values ([(x y) (lb-find a b)])
-                                          (values (+ x 50) (- y 50))))
-                                 #:start-angle (* pi 1/2)
-                                 #:end-angle (* pi 1/2)
-                                 #:line-width 8)
-                                p))
-                    #:set (let ([p ppict-do-state])
-                            (if (at/after blk)
-                                (pin-arrow-line
-                                 20 p
-                                 base (λ (a b)
-                                        (let-values ([(x y) (ct-find a b)])
-                                          (values (- x 25) y)))
-                                 impl (λ (a b)
-                                        (let-values ([(x y) (cb-find a b)])
-                                          (values (- x 25) (- y 50))))
-                                 #:start-angle (* pi 1/2)
-                                 #:end-angle (* pi 1/2)
-                                 #:line-width 8)
-                                p))
-                    #:set (let ([p ppict-do-state])
-                            (if (at/after new)
-                                (pin-arrow-line
-                                 20 p
-                                 impl (λ (a b)
-                                        (let-values ([(x y) (ct-find a b)])
-                                          (values (+ x 25) y)))
-                                 user (λ (a b)
-                                        (let-values ([(x y) (cb-find a b)])
-                                          (values (+ x 25) (- y 50))))
-                                 #:start-angle (* pi 1/2)
-                                 #:end-angle (* pi 1/2)
-                                 #:line-width 8)
-                                p))
-                    #:set (let ([p ppict-do-state])
-                            (if (at/after chng)
-                                (pin-arrow-line
-                                 20 p
-                                 base (λ (a b)
-                                        (let-values ([(x y) (rt-find a b)])
-                                          (values (- x 50) y)))
-                                 impl (λ (a b)
-                                        (let-values ([(x y) (rb-find a b)])
-                                          (values (- x 50) (- y 40))))
-                                 #:start-angle (* pi 1/2)
-                                 #:end-angle (* pi 1/2)
-                                 #:line-width 8)
-                                p))
-                    #:set (let ([p ppict-do-state])
-                            (if (at/after chng)
-                                (pin-arrow-line
-                                 20 p
-                                 impl (λ (a b)
-                                        (let-values ([(x y) (rt-find a b)])
-                                          (values (- x 50) (+ y 40))))
-                                 user (λ (a b)
-                                        (let-values ([(x y) (rb-find a b)])
-                                          (values (- x 50) (- y 50))))
-                                 #:start-angle (* pi 1/2)
-                                 #:end-angle (* pi 1/2)
-                                 #:style 'dot
-                                 #:line-width 8)
-                                p)))
-           #:go (coord 0.03 0.2 'lc)
-           (if (at/after pass) re-feature (ghost re-feature))
-           #:go (coord 0.18 0.6 'lc)
-           (if (at/after blk) rm-feature (ghost rm-feature))
-           #:go (coord 0.31 0.4 'lc)
-           (if (at/after new) new-feature (ghost new-feature))
-           #:go (coord 0.34 0.8 'lc)
-           (cc-superimpose
-            ;(if (at/after hchng) (colorize (filled-rectangle 500 200) "yellow") (blank))
-            (if (at/after chng) change-feature (ghost change-feature)))))
+    (pslide
+     #:go (coord 0.05 0.05 'lt)
+     (if (at/after inh) linguistic-inheritance (ghost linguistic-inheritance))
+     #:go (coord 4/5 1/2 'cc)
+     (ppict-do (blank 400 700)
+               #:go (coord 1/2 0 'ct)
+               (if (at/after us) user (ghost user))
+               #:go (coord 1/2 1/2 'cc)
+               (if (at/after us) impl (ghost impl))
+               #:go (coord 1/2 1 'cb)
+               (if (at/after us) base (ghost base))
+               #:set (let ([p ppict-do-state])
+                       (if (at/after pass)
+                           (pin-arrow-line
+                            20 p
+                            base (λ (a b)
+                                   (let-values ([(x y) (lt-find a b)])
+                                     (values (+ x 50) y)))
+                            user (λ (a b)
+                                   (let-values ([(x y) (lb-find a b)])
+                                     (values (+ x 50) (- y 50))))
+                            #:start-angle (* pi 1/2)
+                            #:end-angle (* pi 1/2)
+                            #:line-width 8)
+                           p))
+               #:set (let ([p ppict-do-state])
+                       (if (at/after blk)
+                           (pin-arrow-line
+                            20 p
+                            base (λ (a b)
+                                   (let-values ([(x y) (ct-find a b)])
+                                     (values (- x 25) y)))
+                            impl (λ (a b)
+                                   (let-values ([(x y) (cb-find a b)])
+                                     (values (- x 25) (- y 50))))
+                            #:start-angle (* pi 1/2)
+                            #:end-angle (* pi 1/2)
+                            #:line-width 8)
+                           p))
+               #:set (let ([p ppict-do-state])
+                       (if (at/after new)
+                           (pin-arrow-line
+                            20 p
+                            impl (λ (a b)
+                                   (let-values ([(x y) (ct-find a b)])
+                                     (values (+ x 25) y)))
+                            user (λ (a b)
+                                   (let-values ([(x y) (cb-find a b)])
+                                     (values (+ x 25) (- y 50))))
+                            #:start-angle (* pi 1/2)
+                            #:end-angle (* pi 1/2)
+                            #:line-width 8)
+                           p))
+               #:set (let ([p ppict-do-state])
+                       (if (at/after chng)
+                           (pin-arrow-line
+                            20 p
+                            base (λ (a b)
+                                   (let-values ([(x y) (rt-find a b)])
+                                     (values (- x 50) y)))
+                            impl (λ (a b)
+                                   (let-values ([(x y) (rb-find a b)])
+                                     (values (- x 50) (- y 40))))
+                            #:start-angle (* pi 1/2)
+                            #:end-angle (* pi 1/2)
+                            #:line-width 8)
+                           p))
+               #:set (let ([p ppict-do-state])
+                       (if (at/after chng)
+                           (pin-arrow-line
+                            20 p
+                            impl (λ (a b)
+                                   (let-values ([(x y) (rt-find a b)])
+                                     (values (- x 50) (+ y 40))))
+                            user (λ (a b)
+                                   (let-values ([(x y) (rb-find a b)])
+                                     (values (- x 50) (- y 50))))
+                            #:start-angle (* pi 1/2)
+                            #:end-angle (* pi 1/2)
+                            #:style 'dot
+                            #:line-width 8)
+                           p)))
+     #:go (coord 0.03 0.2 'lc)
+     (if (at/after pass) re-feature (ghost re-feature))
+     #:go (coord 0.18 0.6 'lc)
+     (if (at/after blk) rm-feature (ghost rm-feature))
+     #:go (coord 0.31 0.4 'lc)
+     (if (at/after new) new-feature (ghost new-feature))
+     #:go (coord 0.34 0.8 'lc)
+     (cc-superimpose
+      ;(if (at/after hchng) (colorize (filled-rectangle 500 200) "yellow") (blank))
+      (if (at/after chng) change-feature (ghost change-feature)))))
   (match type
+    [#f (slide
+         (scale change-feature 1.3))]
     [_
      (staged [inh us pass blk new chng]
-             (mk-slide (at/after inh)
-                       (at/after us)
-                       (at/after pass)
-                       (at/after blk)
-                       (at/after new)
-                       (at/after chng)))
-     (slide
-      (scale change-feature 1.3))]))
+       (mk-slide (at/after inh)
+                 (at/after us)
+                 (at/after pass)
+                 (at/after blk)
+                 (at/after new)
+                 (at/after chng)))]))
 
 (define (end-slide)
   (pslide
@@ -699,3 +699,148 @@
                  (+ (pict-height the-code*) 25)
                  #:border-width 2)
       the-code*)))))
+
+(define (mk-modbeg-slide [label "Interposition Points"])
+  (define v-code
+    (vc-append
+     (hc-append (codeblock-pict @~a{#lang })
+                (cc-superimpose
+                 (colorize (filled-rectangle 100 40) "yellow")
+                 (code video)))
+     (codeblock-pict @~a{
+                        
+ logo
+ talk
+ 
+ ;; Where
+ (define logo
+ ...)
+ (define talk
+ ...)})))
+  
+  (define r-code
+    (vc-append
+     (hc-append (codeblock-pict @~a{#lang })
+                (cc-superimpose
+                 (colorize (filled-rectangle 120 40) (light "red"))
+                 (code racket)))
+     (codeblock-pict @~a{
+ 
+ (provide vid)
+ (require vidlib)
+ (define logo
+ ...)
+ (define talk
+ ...)
+ 
+ (define vid
+ (playlist logo
+ talk))})))
+  (define mbv (cc-superimpose
+               (colorize (filled-rectangle 280 40) "yellow")
+               (code #%module-begin)))
+  (define vl (cc-superimpose
+              (colorize (filled-rectangle 100 40)  "yellow")
+              (code video)))
+  (define rl (cc-superimpose
+              (colorize (filled-rectangle 120 40) (light "red"))
+              (code racket)))
+  (define vlib (cc-superimpose
+                (colorize (filled-rectangle 120 35)  "yellow")
+                (code vidlib)))
+  (define vid-mod
+    (scale
+     (code
+      (module anon #,vl
+        (#,mbv
+         logo
+         talk
+         (define logo
+           ...)
+         (define talk
+           ...))))
+     0.8))
+  (define mbr (cc-superimpose
+               (colorize (filled-rectangle 280 40) (light "red"))
+               (code #%module-begin)))
+  (define rr (cc-superimpose
+              (colorize (filled-rectangle 270 40) (light "red"))
+              (code (require #,vlib))))
+  (define vb (cc-superimpose
+              (colorize (filled-rectangle 300 110) "yellow")
+              (code
+               (vid-begin vid
+                          logo
+                          talk))))
+  (define rmod
+    (scale
+     (code
+      (module anon #,rl
+        (#,mbr
+         #,rr
+         (define logo
+           ...)
+         (define talk
+           ...)
+         #,vb)))
+     0.8))
+  (define pv (cc-superimpose
+              (colorize (filled-rectangle 240 40) (light "red"))
+              (code (provide vid))))
+  (define dv (cc-superimpose
+              (colorize (filled-rectangle 310 110) (light "red"))
+              (code (define vid
+                      (playlist logo
+                                talk)))))
+  (define rpmod
+    (scale
+     (code
+      (module anon racket
+        (#%module-begin:racket
+         #,pv
+         (require vidlib)
+         (define logo
+           ...)
+         (define talk
+           ...)
+         #,dv)))
+     0.8))
+  (pslide
+   #:go (coord 1/2 0.1 'ct)
+   (if label (t label) (blank))
+   #:go (coord 1/2 0.3 'ct)
+   (pin-arrow-line
+    15
+    (ht-append
+     v-code
+     (blank 200)
+     vid-mod)
+    v-code (λ (a b)
+             (let-values ([(x y) (rt-find a b)])
+               (values (- x 15) (+ y 150))))
+    vid-mod (λ (a b)
+              (let-values ([(x y) (lt-find a b)])
+                (values (+ x 35) (+ y 150))))
+    #:line-width 5
+    #:label (t "parses")))
+  (pslide
+   #:go (coord 1/2 0.1 'ct)
+   (t "Interposition Points")
+   #:go (coord 1/2 0.3 'ct)
+   (pin-arrow-line
+    15
+    (ht-append
+     vid-mod
+     (blank 200)
+     rmod)
+    vid-mod (λ (a b)
+              (let-values ([(x y) (rt-find a b)])
+                (values (- x 30) (+ y 150))))
+    rmod (λ (a b)
+           (let-values ([(x y) (lt-find a b)])
+             (values (+ x 20) (+ y 150))))
+    #:line-width 5
+    #:label (t "elaborates"))))
+
+(define (=> text)
+  (hc-append (t "⇒") (st text)))

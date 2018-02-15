@@ -378,4 +378,66 @@ ffmpeg -f lavfi -i testsrc \
 (slide
  (freeze (scale (bitmap "res/want-it-when.png") 0.45)))
 
+(staged [f b]
+  (define bomb (bitmap (bomb-icon #:height 200
+                                  #:bomb-color "red")))
+  (define ev (hc-append (t "⇒") (st "evaluates")))
+  (slide
+   (vc-append
+    25
+    (scale (code (+ (delay 1) (delay 2))) 1.2)
+    (hc-append (t "⇒") (st "evaluates"))
+    (scale (codeblock-pict #:keep-lang-line? #f @~a{
+ #lang racket
+ (+ #<promise> (delay 2)}) 1.2)
+    (if (at/after b) ev (ghost ev))
+    (if (at/after b) bomb (ghost bomb)))))
+
+(let ()
+  (define strictify
+    (code
+     (define (strictify f)
+       (lambda args
+         (apply f (map force args))))))
+  (define str+
+    (code
+     (define lazy-+ (strictify +))))
+  (staged [s+]
+          (slide
+           (scale
+            (vl-append
+             25
+             strictify
+             (if (at/after s+) str+ (ghost str+)))
+            1.3))))
+
+(let ()
+  (define v (send video-block draw 600 100))
+  (define m (send mlt-block draw 250 100))
+  (define f (send ffmpeg-block draw 250 100))
+  (define t
+    (freeze
+     (ppict-do (blank 900 700)
+               #:go (coord 0.5 0.65 'cc)
+               (scale ffi-cloud 1.7)
+               #:go (coord 0.3 0.35 'cc)
+               (scale (rotate doc-cloud (* pi 1/6)) 1.2)
+               #:go (coord 0.75 0.4 'cc)
+               (scale type-cloud 1.55))))
+  (play-n
+   #:steps 20
+   #:delay 0.01
+   #:skip-first? #t
+   (λ (n1 n2)
+     (ppict-do (blank 600 600)
+               #:go (coord 3/4 n1 'cb)
+               (if (= n1 0) (ghost f) f)
+               #:go (coord 1/4 n1 'cb)
+               (if (= n1 0) (ghost m) m)
+               #:go (coord 1/2 (* n1 1/6) 'cb)
+               (if (= n1 0) (ghost v) v)
+               #:go (coord 1/2 1/2)
+               (cellophane t n2)))))
+
+
 |#

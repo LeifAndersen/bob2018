@@ -547,215 +547,12 @@ The problem is that this was a conference, not just one talk. So I still had
  (mk-demo (video:clip "res/bbb/mosaic.mp4")))
 
 ;; ===================================================================================================
-;; Section 2: Towers of Languages
+;; Section 2: Implementing a Language
 
 (slide
- (mt "Movies as Programs:")
- (mt "A Tower of Languages"))
-
-(let ()
-  (define v (send video-block draw 600 100))
-  (define m (send mlt-block draw 250 100))
-  (define f (send ffmpeg-block draw 250 100))
-  (define t
-    (freeze
-     (ppict-do (blank 900 700)
-               #:go (coord 0.5 0.65 'cc)
-               (scale ffi-cloud 1.7)
-               #:go (coord 0.3 0.35 'cc)
-               (scale (rotate doc-cloud (* pi 1/6)) 1.2)
-               #:go (coord 0.75 0.4 'cc)
-               (scale type-cloud 1.55))))
-  (play-n
-   #:steps 20
-   #:delay 0.01
-   #:skip-first? #t
-   (λ (n1 n2)
-     (ppict-do (blank 600 600)
-               #:go (coord 3/4 n1 'cb)
-               (if (= n1 0) (ghost f) f)
-               #:go (coord 1/4 n1 'cb)
-               (if (= n1 0) (ghost m) m)
-               #:go (coord 1/2 (* n1 1/6) 'cb)
-               (if (= n1 0) (ghost v) v)
-               #:go (coord 1/2 1/2)
-               (cellophane t n2)))))
+ (scale linguistic-inheritance 1.5))
 
 (mk-tower-slide)
-
-(let ()
-  (define v-code
-    (vc-append
-     (hc-append (codeblock-pict @~a{#lang })
-                (cc-superimpose
-                 (colorize (filled-rectangle 100 40) "yellow")
-                 (code video)))
-    (codeblock-pict @~a{
-                        
- logo
- talk
- 
- ;; Where
- (define logo
-   ...)
- (define talk
-   ...)})))
-  
-  (define r-code
-    (vc-append
-     (hc-append (codeblock-pict @~a{#lang })
-                (cc-superimpose
-                 (colorize (filled-rectangle 120 40) (light "red"))
-                 (code racket)))
-    (codeblock-pict @~a{
- 
- (provide vid)
- (require vidlib)
- (define logo
-   ...)
- (define talk
-   ...)
- 
- (define vid
-   (playlist logo
-             talk))})))
-  (define mbv (cc-superimpose
-               (colorize (filled-rectangle 280 40) "yellow")
-               (code #%module-begin)))
-  (define vl (cc-superimpose
-              (colorize (filled-rectangle 100 40)  "yellow")
-              (code video)))
-  (define rl (cc-superimpose
-              (colorize (filled-rectangle 120 40) (light "red"))
-              (code racket)))
-  (define vlib (cc-superimpose
-                (colorize (filled-rectangle 120 35)  "yellow")
-                (code vidlib)))
-  (define vid-mod
-    (scale
-    (code
-     (module anon #,vl
-       (#,mbv
-        logo
-        talk
-        (define logo
-          ...)
-        (define talk
-          ...))))
-    0.8))
-  (define mbr (cc-superimpose
-               (colorize (filled-rectangle 280 40) (light "red"))
-               (code #%module-begin)))
-  (define rr (cc-superimpose
-              (colorize (filled-rectangle 270 40) (light "red"))
-              (code (require #,vlib))))
-  (define vb (cc-superimpose
-              (colorize (filled-rectangle 300 110) "yellow")
-              (code
-               (vid-begin vid
-                logo
-                talk))))
-  (define rmod
-    (scale
-    (code
-     (module anon #,rl
-       (#,mbr
-        #,rr
-        (define logo
-          ...)
-        (define talk
-          ...)
-        #,vb)))
-    0.8))
-  (define pv (cc-superimpose
-              (colorize (filled-rectangle 240 40) (light "red"))
-              (code (provide vid))))
-  (define dv (cc-superimpose
-              (colorize (filled-rectangle 310 110) (light "red"))
-              (code (define vid
-                      (playlist logo
-                                talk)))))
-  (define rpmod
-    (scale
-    (code
-    (module anon racket
-      (#%module-begin:racket
-       #,pv
-       (require vidlib)
-       (define logo
-         ...)
-       (define talk
-         ...)
-       #,dv)))
-     0.8))
-  (pslide
-   #:go (coord 1/2 0.1 'ct)
-   (t "Interposition Points")
-   #:go (coord 1/2 0.3 'ct)
-   (pin-arrow-line
-    15
-    (ht-append
-     v-code
-     (blank 200)
-     vid-mod)
-    v-code (λ (a b)
-             (let-values ([(x y) (rt-find a b)])
-               (values (- x 15) (+ y 150))))
-    vid-mod (λ (a b)
-              (let-values ([(x y) (lt-find a b)])
-                (values (+ x 35) (+ y 150))))
-    #:line-width 5
-    #:label (t "parses")))
-  (pslide
-   #:go (coord 1/2 0.1 'ct)
-   (t "Interposition Points")
-   #:go (coord 1/2 0.3 'ct)
-   (pin-arrow-line
-    15
-    (ht-append
-     vid-mod
-     (blank 200)
-     rmod)
-    vid-mod (λ (a b)
-              (let-values ([(x y) (rt-find a b)])
-                (values (- x 30) (+ y 150))))
-    rmod (λ (a b)
-           (let-values ([(x y) (lt-find a b)])
-             (values (+ x 20) (+ y 150))))
-    #:line-width 5
-    #:label (t "elaborates"))))
-
-(let ()
-  (define lang (codeblock-pict "#lang racket"))
-  (define rec-code (code (require racket)))
-  (define all-from-out (code (provide (all-from-out racket))))
-  (define only-out (code (provide (only-out racket
-                                            lambda
-                                            +))))
-  (define ~mb (cc-superimpose
-               (colorize (filled-rectangle 350 40) "cyan")
-               (code video-module-begin)))
-  (define %mb (cc-superimpose
-               (colorize (filled-rectangle 270 40) "yellow")
-               (code #%module-begin)))
-  (define r-%mb (cc-superimpose
-                 (colorize (filled-rectangle 270 40) (light "red"))
-                 (code #%module-begin)))
-  (define rename-out
-    (freeze (code (provide (rename-out [#,~mb
-                                        #,%mb])))))
-  (define def-syntax
-    (freeze (code (define-syntax (#,~mb stx)
-                      ... #,r-%mb ...))))
-  (slide
-   (t* "Implementing Interposition Points")
-   (vl-append
-    lang
-    rename-out
-    def-syntax)))
-
-;; ===================================================================================================
-;; Section 3: Implementing a Language
 
 (make-repl-slides
  #'(define (or a b)
@@ -890,16 +687,39 @@ The problem is that this was a conference, not just one talk. So I still had
     (code:comment "=> 42")))
   1.4))
 
+(pslide
+ #:go (coord 1/2 0 'ct)
+ (mt "Interposition Points")
+ #:go (coord 1/2 1/2 'cc)
+ (vc-append
+  25
+  (scale (code #%app) 2)
+  (scale (code #%module-begin) 2)))
+
+(slide
+ (scale (code (+ 1 2)) 1.3)
+ (=> "elaborates")
+ (scale (code (#%app + 1 2)) 1.3))
+
 (let ()
+  (define rapp
+    (cc-superimpose (colorize (filled-rectangle 100 30) color-3)
+                    (code #%app)))
+  (define lapp
+    (cc-superimpose (colorize (filled-rectangle 150 30) color-2)
+                    (code lazy-app)))
+  (define napp
+    (cc-superimpose (colorize (filled-rectangle 100 30) color-1)
+                    (code #%app)))
   (define lazy-app
     (code
-     (define-syntax-rule (lazy-app rator rand ...)
-       (lazy (#%app rator (delay rand) ...)))))
+     (define-syntax-rule (#,lapp rator rand ...)
+       (lazy (#,rapp rator (delay rand) ...)))))
   (define renamer
     (code
      (provide
-      (except-out (all-from-out racket/base #%app))
-      (rename-out [lazy-app #%app]))))
+      (except-out (all-from-out racket/base #,rapp))
+      (rename-out [#,lapp #,napp]))))
   (staged [app prov]
           (slide
            (vl-append
@@ -940,8 +760,19 @@ The problem is that this was a conference, not just one talk. So I still had
                 (code 3))
      1.2))))
 
-(slide
- (scale (code define-syntax) 3))
+(staged [n h]
+  (define defstx
+    (if (at/after h)
+        (cc-superimpose
+         (colorize (filled-rectangle 250 30) "yellow")
+         (code define-syntax))
+        (code define-syntax)))
+  (slide
+   (code
+    (provide (rename-out [lazy-modbeg
+                          #%module-begin]))
+    (#,defstx lazy-modbeg
+      (λ (stx) ... #'(force body) ...)))))
 
 (slide
  (scale
@@ -963,13 +794,6 @@ The problem is that this was a conference, not just one talk. So I still had
  (hc-append (scale (code expr) 1.5) (t " : compile time expression")))
 
 (slide
- (code
-  (provide (rename-out [lazy-modbeg
-                        #%module-begin]))
-  (define-syntax lazy-modbeg
-    (λ (stx) ... #'(force body) ...))))
-
-(slide
  (scale
   (code
    (require syntax/wrapping-modbeg)
@@ -989,57 +813,52 @@ The problem is that this was a conference, not just one talk. So I still had
       (lazy (#%app a (lazy b) ...)))
     (define-syntax-rule (#%lazy-top-interaction . form)
       (#%top-interaction . (force form)))
-    (provide (rename-out [#%lazy-module-begin #%module-begin]
+    (define (lazy-+ . args)
+      (apply + (map force args)))
+    (provide (rename-out [lazy-+ +]
+                         [#%lazy-module-begin #%module-begin]
                          [#%lazy-top-interaction #%top-interaction]
                          [~app #%app])))
  '(require 'foo)
  #:init #'(+ 1 2))
 
-(staged [f b]
-  (define bomb (bitmap (bomb-icon #:height 200
-                                  #:bomb-color "red")))
-  (define ev (hc-append (t "⇒") (st "evaluates")))
-  (slide
-   (vc-append
-    25
-    (scale (code (+ (delay 1) (delay 2))) 1.2)
-    (hc-append (t "⇒") (st "evaluates"))
-    (scale (codeblock-pict #:keep-lang-line? #f @~a{
- #lang racket
- (+ #<promise> (delay 2)}) 1.2)
-    (if (at/after b) ev (ghost ev))
-    (if (at/after b) bomb (ghost bomb)))))
-
-(let ()
-  (define strictify
-    (code
-     (define (strictify f)
-       (lambda args
-         (apply f (map force args))))))
-  (define str+
-    (code
-     (define lazy-+ (strictify +))))
-  (staged [s+]
-          (slide
-           (scale
-            (vl-append
-             25
-             strictify
-             (if (at/after s+) str+ (ghost str+)))
-            1.3))))
+(mk-modbeg-slide #f)
 
 ;; ===================================================================================================
-;; Section 4: Video, the tower
+;; Section 3: Towers of Languages
 
 (slide
- (mk-video-tower #:render-sp #f
-                 #:render-ffi #f
-                 #:render-video #t
-                 #:render-ts #f
-                 #:render-tv #f
-                 #:render-scribble #f
-                 #:render-viddoc #f
-                 #:render-top #f))
+ (mt "Movies as Programs:")
+ (mt "A Tower of Languages"))
+
+(let ()
+  (define v (send video-block draw 600 100))
+  (define m (send mlt-block draw 250 100))
+  (define f (send ffmpeg-block draw 250 100))
+  (define t
+    (freeze
+     (ppict-do (blank 900 700)
+               #:go (coord 0.5 0.65 'cc)
+               (scale ffi-cloud 1.7)
+               #:go (coord 0.3 0.35 'cc)
+               (scale (rotate doc-cloud (* pi 1/6)) 1.2)
+               #:go (coord 0.75 0.4 'cc)
+               (scale type-cloud 1.55))))
+  (define tower
+    (freeze
+     (mk-video-tower #:render-sp #f
+                     #:render-ffi #f
+                     #:render-video #t
+                     #:render-ts #f
+                     #:render-tv #f
+                     #:render-scribble #f
+                     #:render-viddoc #f
+                     #:render-top #f)))
+  (staged [a b]
+    (slide
+     (cc-superimpose
+      tower
+      (if (at/after b) t (ghost t))))))
 
 (slide
  (scale ffi-cloud 2))
