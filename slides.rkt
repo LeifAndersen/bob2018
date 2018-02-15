@@ -526,11 +526,11 @@ The problem is that this was a conference, not just one talk. So I still had
  (scale
   (code (define WIDTH 1920)
         (define HEIGHT 1080)
-        (playlist (color "black")
-                  (overlay-merge 0 0 (/ WIDTH 2) HEIGHT)
-                  (clip "running.mp4")
-                  (overlay-merge (/ WIDTH 2) 0 (/ WIDTH 2) HEIGHT)
-                  (clip "flying.mp4")))
+        (multitrack (color "black")
+                    (overlay-merge 0 0 (/ WIDTH 2) HEIGHT)
+                    (clip "running.mp4")
+                    (overlay-merge (/ WIDTH 2) 0 (/ WIDTH 2) HEIGHT)
+                    (clip "flying.mp4")))
   0.8)
  (mk-demo (video:clip "res/bbb/split.mp4")))
 
