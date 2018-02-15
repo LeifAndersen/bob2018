@@ -15,6 +15,7 @@
          pict/balloon
          slideshow/staged-slide
          racket/draw
+         "demo.rkt"
          "block.rkt"
          "logo.rkt"
          "utils.rkt"
@@ -144,20 +145,20 @@
  #lang video
  ;; Create a mosaic of four videos
  (for/vertical ([i (in-range 2)])
- (for/horizontal ([j (in-range 2)])
- (external-video "branded.vid"
- (clip "logo.png")
- (clip (format "~aX~a.mp4" i j)))))}))
+   (for/horizontal ([j (in-range 2)])
+     (external-video "branded.vid"
+     (clip "logo.png")
+     (clip (format "~aX~a.mp4" i j)))))}))
 
   (define the-lib* (codeblock-pict @~a{
  #lang video/lib
  ;; Generate a branded video 
  (define-video (branded logo vid)
- logo
- (fade-transition 1)
- (multitrack logo
- (overlay 0 0 100 100)
- vid))}))
+   logo
+   (fade-transition 1)
+   (multitrack logo
+               (overlay 0 0 100 100)
+               vid))}))
 
   (define the-code
     (bitmap
@@ -634,7 +635,7 @@
                                     #:color "red")))
     (define ffmpeg (freeze (scale (bitmap "res/ffmpeg.png") 0.05)))
     (define runtime (desktop-machine 1 '(binary)))
-    (define out (filled-rectangle 100 100))
+    (define out (mk-demo bbb-clip 100 100))
     (ppict-do (blank 1000 700)
               #:go (coord 0.1 0.4 'cc)
               src

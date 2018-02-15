@@ -646,7 +646,7 @@ The problem is that this was a conference, not just one talk. So I still had
   (pslide
    #:go (coord 0.61 0.710 'cc)
    (if (at/after exp) (colorize (filled-rectangle 75 36) color-1) (blank))
-   #:go (coord 0.20 0.810 'cc)
+   #:go (coord 0.21 0.810 'cc)
    (if (at/after exp) (colorize (filled-rectangle 75 36) color-3) (blank))
    #:go (coord 0.3 0.33 'cc)
    (if (at/after exp) (colorize (filled-rectangle 75 36) color-3) (blank))
