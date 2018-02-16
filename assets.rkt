@@ -147,8 +147,8 @@
  (for/vertical ([i (in-range 2)])
    (for/horizontal ([j (in-range 2)])
      (external-video "branded.vid"
-     (clip "logo.png")
-     (clip (format "~aX~a.mp4" i j)))))}))
+       (clip "logo.png")
+       (clip (format "~aX~a.mp4" i j)))))}))
 
   (define the-lib* (codeblock-pict @~a{
  #lang video/lib
