@@ -287,7 +287,7 @@ The problem is that this was a conference, not just one talk. So I still had
 
 (the-landscape-slide)
 
-(make-a-dsl-slide)
+(make-a-dsl-slide #:slogan 'spark)
 
 (slide
  (lt "Make a DSL!")
@@ -919,6 +919,10 @@ The problem is that this was a conference, not just one talk. So I still had
 (pslide #:go (coord 1/2 1/3 'cc)
         video-architecture)
 
+(make-a-dsl-slide "FFI"
+                  #:lower -80
+                  #:carrot-offset -20)
+
 (let ()
   (define av-frame-get-buffer
     (let ()
@@ -980,6 +984,10 @@ int av_frame_get_buffer(AVFrame *frame,
 
 (slide
  (scale doc-cloud 1.5))
+
+(make-a-dsl-slide "Documentation"
+                  #:lower -80
+                  #:carrot-offset -20)
 
 (let ()
   (define scrib
@@ -1050,6 +1058,9 @@ It aims to merge the capabilities of a traditional}|)
            (t "A Typed DSL")
            #:go (coord 1/2 1/2 'cc)
            a))
+  (make-a-dsl-slide "Types"
+                  #:lower -80
+                  #:carrot-offset -20)
   (staged [example1 code1]
           (pslide
            #:go (coord 1/2 0.1 'cc)
