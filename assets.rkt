@@ -25,14 +25,6 @@
 (define color-2 "pink")
 (define color-3 "cyan")
 
-(define script-clock
-  (bitmap (stopwatch-icon
-           0 8 #:height 100)))
-
-(define nlve-clock
-  (bitmap (stopwatch-icon
-           0 27 #:height 100)))
-
 (define clocks
   (with-cache (cachefile "the-clocks.rktd")
     (λ ()
@@ -845,3 +837,19 @@
 
 (define (=> text)
   (hc-append (t "⇒") (st text)))
+
+(define script-clock
+  (freeze
+   (ppict-do
+    (bitmap (stopwatch-icon
+             0 8 #:height 250))
+    #:go (coord 1 1 'rb)
+    (scale the-check 0.4))))
+
+(define nlve-clock
+  (freeze
+   (ppict-do
+    (bitmap (stopwatch-icon
+             0 40 #:height 250))
+    #:go (coord 1 1 'rb)
+    (scale the-X 0.4))))

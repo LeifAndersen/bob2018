@@ -546,8 +546,24 @@ The problem is that this was a conference, not just one talk. So I still had
 (slide
  (mk-demo (video:clip "res/bbb/mosaic.mp4")))
 
+(slide
+ (hc-append
+  75
+  (vc-append
+   script-clock
+   (t* "Implementing Video")
+   (t* "+ Editing"))
+  (vc-append
+   nlve-clock
+   (t* "Manual Editing")
+   (t* ""))))
+
 ;; ===================================================================================================
 ;; Section 2: Implementing a Language
+
+(slide
+ (mt "From Libraries to")
+ (lt "Languages"))
 
 (slide
  (scale linguistic-inheritance 1.5))
@@ -558,7 +574,7 @@ The problem is that this was a conference, not just one talk. So I still had
  #'(define (or a b)
      (if a a b))
  #'(or 42
-       (println "launch the missals")))
+       (println "launch the missiles")))
 
 (make-repl-slides
  #'(define-macro (or a b)
@@ -658,6 +674,10 @@ The problem is that this was a conference, not just one talk. So I still had
      [(at/after use) user-file]
      [else (blank)])))
 
+(slide
+ (mt "First Class")
+ (mt "Languages"))
+
 (staged [def use]
         (define the-use
           (code (first 42
@@ -714,11 +734,11 @@ The problem is that this was a conference, not just one talk. So I still had
   (define lazy-app
     (code
      (define-syntax-rule (#,lapp rator rand ...)
-       (lazy (#,rapp rator (delay rand) ...)))))
+       (delay (#,rapp rator (delay rand) ...)))))
   (define renamer
     (code
      (provide
-      (except-out (all-from-out racket/base #,rapp))
+      (except-out (all-from-out racket/base) #,rapp)
       (rename-out [#,lapp #,napp]))))
   (staged [app prov]
           (slide
@@ -727,6 +747,39 @@ The problem is that this was a conference, not just one talk. So I still had
             (codeblock-pict "#lang racket")
             (if (at/after prov) renamer (ghost renamer))
             lazy-app))))
+
+(staged [f b]
+  (define bomb (bitmap (bomb-icon #:height 200
+                                  #:bomb-color "red")))
+  (define ev (hc-append (t "⇒") (st "evaluates")))
+  (slide
+   (vc-append
+    25
+    (scale (code (+ (delay 1) (delay 2))) 1.2)
+    (hc-append (t "⇒") (st "evaluates"))
+    (scale (codeblock-pict #:keep-lang-line? #f @~a{
+ #lang racket
+ (+ #<promise> (delay 2)}) 1.2)
+    (if (at/after b) ev (ghost ev))
+    (if (at/after b) bomb (ghost bomb)))))
+
+(let ()
+  (define strictify
+    (code
+     (define (strictify f)
+       (lambda args
+         (apply f (map force args))))))
+  (define str+
+    (code
+     (define lazy-+ (strictify +))))
+  (staged [s+]
+          (slide
+           (scale
+            (vl-append
+             25
+             strictify
+             (if (at/after s+) str+ (ghost str+)))
+            1.3))))
 
 (make-repl-only-slide
  '(module foo racket
@@ -760,6 +813,13 @@ The problem is that this was a conference, not just one talk. So I still had
                 (code 3))
      1.2))))
 
+(slide
+ (code
+  (provide (rename-out [lazy-modbeg
+                        #%module-begin]))
+  (define-syntax-rule (lazy-modbeg body ...)
+    .... (force body) ....)))
+
 (staged [n h]
   (define defstx
     (if (at/after h)
@@ -768,11 +828,12 @@ The problem is that this was a conference, not just one talk. So I still had
          (code define-syntax))
         (code define-syntax)))
   (slide
-   (code
-    (provide (rename-out [lazy-modbeg
-                          #%module-begin]))
-    (#,defstx lazy-modbeg
-      (λ (stx) ... #'(force body) ...)))))
+   (scale
+    (code
+     (require syntax/wrapping-modbeg)
+     (#,defstx lazy-modbeg module-begin
+       (make-wrapping-module-begin ...)))
+    1.3)))
 
 (slide
  (scale
@@ -792,14 +853,6 @@ The problem is that this was a conference, not just one talk. So I still had
  (blank 100)
  (hc-append (scale (code id) 1.5) (t " : run time binding"))
  (hc-append (scale (code expr) 1.5) (t " : compile time expression")))
-
-(slide
- (scale
-  (code
-   (require syntax/wrapping-modbeg)
-   (define-syntax lazy-modbeg module-begin
-     (make-wrapping-module-begin ...)))
- 1.3))
 
 (make-repl-only-slide
  '(module foo racket
