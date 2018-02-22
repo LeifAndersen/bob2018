@@ -27,6 +27,7 @@
 
 (set-page-numbers-visible! #f)
 ;(current-page-number-font (make-object font% 42 'default))
+#;
 (set-spotlight-style! #:size 100
                       #:color (make-object color% 64 64 0 0.66))
 
@@ -165,6 +166,7 @@
 ;; Section 1: Video the Language
 
 (slide
+ #:name "Section 1: Video the Language"
  (mt "Movies as Programs")
  (scale the-logo 0.4)
  (t "Leif Andersen"))
@@ -281,6 +283,14 @@ The problem is that this was a conference, not just one talk. So I still had
 (slide
  (lt "One down")
  (lt "19 more to go..."))
+
+(play-n
+ #:delay 0.01
+ #:steps 50
+ (λ (n)
+   (define index (min (exact-floor (* n (length clock-list)))
+                      (sub1 (length clock-list))))
+   (list-ref clock-wall-list index)))
 
 (slide
  (mt "We Need Automation"))
@@ -543,8 +553,52 @@ The problem is that this was a conference, not just one talk. So I still had
 
 (vid-slide)
 
+#;
 (slide
  (mk-demo (video:clip "res/bbb/mosaic.mp4")))
+
+(live-demo `(playlist
+             (clip "res/bbb/mosaic.mp4")
+             (clip "res/bbb/mosaic.mp4"))
+           'horizontal
+           @~a{
+ #lang video
+ ;; Create a mosaic of four videos
+ (for/vertical ([i (in-range 2)])
+   (for/horizontal ([j (in-range 2)])
+     (external-video "branded.vid"
+       (clip "logo.png")
+       (clip (format "~aX~a.mp4" i j)))))})
+
+(live-demo `(playlist
+             (clip "res/bbb/mosaic.mp4")
+             (clip "res/bbb/mosaic.mp4")
+             (clip "res/bbb/mosaic.mp4"))
+           'horizontal
+           @~a{
+ #lang video
+ ;; Create a mosaic of four videos
+ (for/vertical ([i (in-range 2)])
+   (for/horizontal ([j (in-range 2)])
+     (external-video "branded.vid"
+       (clip "logo.png")
+       (clip (format "~aX~a.mp4" i j)))))})
+
+(live-demo `(playlist
+             (clip "res/dragon.mp4")
+             (clip "res/bbb/mosaic.mp4")
+             (clip "res/bbb/mosaic.mp4")
+             (clip "res/bbb/mosaic.mp4"))
+           'horizontal
+           @~a{
+ #lang video
+ (clip "dragon.mp4")
+ ;; Create a mosaic of four videos
+ (for/vertical ([i (in-range 2)])
+   (for/horizontal ([j (in-range 2)])
+     (external-video "branded.vid"
+       (clip "logo.png")
+       (clip (format "~aX~a.mp4" i j)))))})
 
 (slide
  (hc-append
@@ -562,6 +616,7 @@ The problem is that this was a conference, not just one talk. So I still had
 ;; Section 2: Implementing a Language
 
 (slide
+ #:name "Section 2: Implementing a Language"
  (mt "From Libraries to")
  (lt "Languages"))
 
@@ -570,102 +625,118 @@ The problem is that this was a conference, not just one talk. So I still had
 
 (mk-tower-slide)
 
-(make-repl-slides
- #'(define (or a b)
-     (if a a b))
- #'(or 42
-       (println "launch the missiles")))
+(slide
+ (scale
+  (code
+   (for/playlist ([scene (in-list scene-list)])
+     (multitrack scene
+                 (overlay-merge 10 10 300 300)
+                 (clip "logo.mp4"))))
+  1.1))
 
 (make-repl-slides
- #'(define-macro (or a b)
-     `(let ([tmp ,a])
-        (if tmp tmp ,b)))
- #'(let ([tmp #t])
-     (or #f tmp))
+ #'(define (for/playlist seq body)
+     (apply playlist
+            (for/list ([i (in-list seq)])
+              (body i))))
+ #'(for/playlist (list (clip "a.mp4")
+                       (clip "b.mp4"))
+     (λ (scene)
+       (multitrack scene
+                   (overlay-merge 10 10 300 300)
+                   (clip "logo.mp4")))))
+
+(make-repl-slides
+ (quote-syntax
+  (define-macro (for/playlist seq . body)
+    `(apply playlist
+            (for/list ,seq
+              ,@body))))
+ #'(let ([playlist 42])
+     (for/playlist ([s (list (clip "a.mp4"))])
+       (multitrack s
+                   (overlay-merge 10 10 300 300)
+                   (clip "logo.mp4"))))
  #:middle
  (λ ()
    (staged (el ev)
      (define earrow (hc-append (t "⇒") (st " evaluates")))
-     (define e (code 42))
+     (define e (tt "#<playlist>"))
      (slide
       (vc-append
        25
-       (code (or 42 (never-call-this)))
+       (code (for/playlist ([s (list (clip "a.mp4"))])
+               (multitrack ...)))
        (hc-append (t "⇒") (st " elaborates"))
-       (code (let ([tmp 42])
-               (if tmp tmp (never-call-this))))
+       (code (apply playlist
+                    (for/list ([s (list (clip "a.mp4"))])
+                      (multitrack ....))))
        (if (at/after ev) earrow (ghost earrow))
        (if (at/after ev) e (ghost e)))))
    (staged (e1 e2 e3)
      (define e2-arrow (hc-append (t "⇒") (st " elaborates")))
      (define e2-code
-       (code (let ([tmp #t])
-               (let ([tmp #f])
-                 (if tmp tmp tmp)))))
+       (code (let ([playlist 42])
+               (apply playlist ....))))
      (define e3-arrow (hc-append (t "⇒") (st " evaluates")))
-     (define e3-code (code #f))
+     (define e3-code eval-bomb)
      (slide
       (vc-append
        25
-       (code (let ([tmp #t])
-               (or #f tmp)))
+       (code (let ([playlist 42])
+               (for/playlist ....)))
        (if (at/after e2) e2-arrow (ghost e2-arrow))
        (if (at/after e2) e2-code (ghost e2-code))
        (if (at/after e3) e3-arrow (ghost e3-arrow))
        (if (at/after e3) e3-code (ghost e3-code)))))))
 
 (make-repl-slides
- #'(define-macro (or a b)
-     (define tmp (gensym))
-     `(let ([,tmp ,a])
-        (if ,tmp ,tmp ,b)))
-  #'(let ([tmp #t])
-      (or #f tmp))
- #'(begin
-     (define-macro (let asn body)
-       body)
-     (or 42 "puppy")))
-
-(make-repl-slides
- #'(define-syntax-rule (or a b)
-     (let ([tmp a])
-       (if tmp tmp b)))
- #'(begin
-     (define-syntax-rule (let arg body)
-       body)
-     (define tmp #t)
-     (or #f tmp)))
+ (quote-syntax
+  (define-syntax-rule (for/playlist seq
+                        body ...)
+    (apply playlist
+           (for/list seq
+             body ...))))
+ #'(let ([playlist 42])
+     (for/playlist ([s (list (clip "a.mp4"))])
+       (multitrack s
+                   (overlay-merge 10 10 300 300)
+                   (clip "logo.mp4")))))
 
 (staged [def use exp]
   (define lang-file
-   (codeblock-file "lang-piece.rkt" @~a{
+   (codeblock-file "lang-extension.rkt" @~a{
  #lang racket
- (provide or)
- (define-syntax-rule (or a b)
-   (let ([tmp a])
-     (if tmp tmp b)))}))
+ (provide for/playlist)
+ (define-syntax-rule (for/playlist seq
+                       body ...)
+   (apply playlist
+          (for/list seq
+            body ...)))}))
   (define user-file
    (codeblock-file "user-prog.rkt" @~a{
  #lang racket
- (require "lang-piece.rkt"
- (define-syntax-rule (let asn body)
-   body)
- (or #f 5)}))
+ (require "lang-extension.rkt"
+ (define playlist 42)
+ (for/playlist ([i (list (clip "a.mp4")
+                         (clip "b.mp4"))])
+   (multitrack ....))}))
   (define exp-file
     (codeblock-file "user-prog.rkt" @~a{
  #lang racket
- (require "lang-piece.rkt")
- (define-syntax-rule (let asn body)
-   body)
- (let ([tmp #f])
-   (if tmp tmp 5))}))
+ (require "lang-extension.rkt"
+ (define playlist 42)
+ (apply playlist
+        (for/list ([i (list (clip "a.mp4")
+                            (clip "b.mp4"))])
+          (multitrack ....)))}))
   (pslide
-   #:go (coord 0.61 0.710 'cc)
-   (if (at/after exp) (colorize (filled-rectangle 75 36) color-1) (blank))
-   #:go (coord 0.21 0.810 'cc)
-   (if (at/after exp) (colorize (filled-rectangle 75 36) color-3) (blank))
-   #:go (coord 0.3 0.33 'cc)
-   (if (at/after exp) (colorize (filled-rectangle 75 36) color-3) (blank))
+   #:go (coord 0.305 0.710 'cc)
+   (if (at/after exp) (colorize (filled-rectangle 150 36) color-1) (blank))
+   #:go (coord 0.29 0.760 'cc)
+   (if (at/after exp) (colorize (filled-rectangle 150 36) color-3) (blank))
+   #:go (coord 0.39 0.33 'cc)
+   (if (at/after exp) (colorize (filled-rectangle 150 36) color-3) (blank))
    #:go (coord 1/2 0.25 'cc)
    lang-file
    #:go (coord 1/2 0.5 'ct)
@@ -675,37 +746,66 @@ The problem is that this was a conference, not just one talk. So I still had
      [else (blank)])))
 
 (slide
- (mt "First Class")
- (mt "Languages"))
+ (mt "Non-Local")
+ (mt "Language Features"))
 
-(staged [def use]
-        (define the-use
-          (code (first 42
-                       (let loop ()
-                         (loop)))
-                (code:comment "=> Infinite Loop")))
-        (slide
-         (scale
-          (vl-append
-           (codeblock-pict "#lang racket")
-           (code
-            (define (first x y) x)
-            code:blank
-            #,(if (at/after use) the-use (ghost the-use))))
-          1.4)))
-
-(slide
- (scale
-  (vl-append
-   (rectify-pict (codeblock-pict "#lang lazy") "yellow")
-   (code
-    (define (first x y) x)
-    code:blank
-    (first 42
-           (let loop ()
-             (loop)))
-    (code:comment "=> 42")))
-  1.4))
+(let ()
+  (define (mk-pieces)
+    (define lang (codeblock-pict "#lang video\n"))
+    (define logo-1 (code logo))
+    (define logo-2 (code logo))
+    (define deflogo (code (define logo ...)))
+    (define talk (code talk))
+    (define deftalk (code (define talk ...)))
+    (define prov (code (provide vid)))
+    (define vid (code (define vid (playlist
+                                   #,(ghost logo-1)
+                                   #,(ghost talk)
+                                   #,(ghost logo-2)))))
+    (values lang logo-1 logo-2 deflogo talk deftalk prov vid))
+  (define-values (lva l1a l2a dla ta dta pa va)
+    (mk-pieces))
+  (define-values (lvb l1b l2b dlb tb dtb pb vb)
+    (mk-pieces))
+  (define-values (lv l1 l2 dl t dt p v)
+    (mk-pieces))
+  (define the-pict
+    (ghost
+     (cc-superimpose
+      (vl-append
+       lva
+       (code
+        #,l1a
+        #,dla
+        (code:blank)
+        #,ta
+        #,dta
+        (code:blank)
+        #,l2a))
+      (vl-append
+       lvb
+       (code
+        #,pb
+        (code:blank)
+        #,dlb
+        #,dtb
+        (code:blank)
+        #,vb)))))
+  (play-n
+   #:steps 20
+   #:delay 0.025
+   (λ (n)
+     (scale
+      (let* ([_ (slide-pict the-pict lv lva lvb n)]
+             [_ (slide-pict _ dt dta dtb n)]
+             [_ (slide-pict _ dl dla dlb n)]
+             [_ (pin-over _ pb lt-find (cellophane p n))]
+             [_ (slide-pict _ t ta tb n)]
+             [_ (slide-pict _ l1 l1a l1b n)]
+             [_ (slide-pict _ l2 l2a l2b n)]
+             [_ (pin-over _ vb lt-find (cellophane v n))])
+        _)
+      1.5))))
 
 (pslide
  #:go (coord 1/2 0 'ct)
@@ -721,104 +821,9 @@ The problem is that this was a conference, not just one talk. So I still had
  (=> "elaborates")
  (scale (code (#%app + 1 2)) 1.3))
 
-(let ()
-  (define rapp
-    (cc-superimpose (colorize (filled-rectangle 100 30) color-3)
-                    (code #%app)))
-  (define lapp
-    (cc-superimpose (colorize (filled-rectangle 150 30) color-2)
-                    (code lazy-app)))
-  (define napp
-    (cc-superimpose (colorize (filled-rectangle 100 30) color-1)
-                    (code #%app)))
-  (define lazy-app
-    (code
-     (define-syntax-rule (#,lapp rator rand ...)
-       (delay (#,rapp rator (delay rand) ...)))))
-  (define renamer
-    (code
-     (provide
-      (except-out (all-from-out racket/base) #,rapp)
-      (rename-out [#,lapp #,napp]))))
-  (staged [app prov]
-          (slide
-           (vl-append
-            25
-            (codeblock-pict "#lang racket")
-            (if (at/after prov) renamer (ghost renamer))
-            lazy-app))))
+(mk-modbeg-slide)
 
-(staged [f b]
-  (define bomb (bitmap (bomb-icon #:height 200
-                                  #:bomb-color "red")))
-  (define ev (hc-append (t "⇒") (st "evaluates")))
-  (slide
-   (vc-append
-    25
-    (scale (code (+ (delay 1) (delay 2))) 1.2)
-    (hc-append (t "⇒") (st "evaluates"))
-    (scale (codeblock-pict #:keep-lang-line? #f @~a{
- #lang racket
- (+ #<promise> (delay 2)}) 1.2)
-    (if (at/after b) ev (ghost ev))
-    (if (at/after b) bomb (ghost bomb)))))
-
-(let ()
-  (define strictify
-    (code
-     (define (strictify f)
-       (lambda args
-         (apply f (map force args))))))
-  (define str+
-    (code
-     (define lazy-+ (strictify +))))
-  (staged [s+]
-          (slide
-           (scale
-            (vl-append
-             25
-             strictify
-             (if (at/after s+) str+ (ghost str+)))
-            1.3))))
-
-(make-repl-only-slide
- '(module foo racket
-    (define-syntax-rule (~app a b ...)
-      (lazy (#%app a (lazy b) ...)))
-    (provide (rename-out [~app #%app])))
- '(require 'foo)
- #:init #'(+ 1 2))
-
-(play-n
- #:steps 20
- #:delay 0.025
- (λ (n)
-   (vc-append
-    25
-    (scale (code (+ 1 2)) 1.2)
-    (hc-append (t "⇒") (st "elaborates"))
-    (fade-around-pict
-     n
-     (scale
-      (cc-superimpose
-       (colorize (filled-rectangle 580 35) (light "orange"))
-       (code (delay (+ (delay 1) (delay 2)))))
-      1.2)
-     (λ (p)
-       (scale (code (force #,(scale p (/ 1 1.2)))) 1.2)))
-    (hc-append (t "⇒") (st "evaluates"))
-    (scale
-     (fade-pict n
-                (tt "#<promise>")
-                (code 3))
-     1.2))))
-
-(slide
- (code
-  (provide (rename-out [lazy-modbeg
-                        #%module-begin]))
-  (define-syntax-rule (lazy-modbeg body ...)
-    .... (force body) ....)))
+(mk-interpos-slide)
 
 (staged [n h]
   (define defstx
@@ -831,7 +836,7 @@ The problem is that this was a conference, not just one talk. So I still had
    (scale
     (code
      (require syntax/wrapping-modbeg)
-     (#,defstx lazy-modbeg module-begin
+     (#,defstx video-module-begin
        (make-wrapping-module-begin ...)))
     1.3)))
 
@@ -854,33 +859,11 @@ The problem is that this was a conference, not just one talk. So I still had
  (hc-append (scale (code id) 1.5) (t " : run time binding"))
  (hc-append (scale (code expr) 1.5) (t " : compile time expression")))
 
-(make-repl-only-slide
- '(module foo racket
-    (require (for-syntax syntax/parse)
-             syntax/parse/define
-             syntax/wrap-modbeg)
-    (define-syntax #%lazy-module-begin
-      (make-wrapping-module-begin
-       #'force #'#%module-begin))
-    (define-syntax-rule (~app a b ...)
-      (lazy (#%app a (lazy b) ...)))
-    (define-syntax-rule (#%lazy-top-interaction . form)
-      (#%top-interaction . (force form)))
-    (define (lazy-+ . args)
-      (apply + (map force args)))
-    (provide (rename-out [lazy-+ +]
-                         [#%lazy-module-begin #%module-begin]
-                         [#%lazy-top-interaction #%top-interaction]
-                         [~app #%app])))
- '(require 'foo)
- #:init #'(+ 1 2))
-
-(mk-modbeg-slide #f)
-
 ;; ===================================================================================================
 ;; Section 3: Towers of Languages
 
 (slide
+ #:name "Section 3: Towers of Languages"
  (mt "Movies as Programs:")
  (mt "A Tower of Languages"))
 
@@ -1014,6 +997,9 @@ It aims to merge the capabilities of a traditional}|)
            (st "(ICFP, 2009)"))))
 
 (slide
+ (freeze (scale (bitmap "res/tools.png") 0.58)))
+
+(slide
  (mk-video-tower #:render-sp #f
                  #:render-ts #f
                  #:render-tv #f
@@ -1085,37 +1071,37 @@ It aims to merge the capabilities of a traditional}|)
 (make-repl-slides
  (quote-syntax
   (define-syntax-rule
-    (let ([x e] ...)
-      body)
-    ((λ (x ...) body) e ...)))
- #'(let ([a 5])
-     a)
- #'(let ([(a b c) 5])
-     a))
+    (define/playlist (name args ...)
+      body ...)
+    (define name
+      (λ (args ...)
+        (playlist body ...)))))
+ #'(define/playlist (double A)
+     A
+     A)
+ #'(define/playlist (double (A B C))
+     A))
 
 (make-repl-slides
  #:background
  (ppict-do ((pslide-base-pict))
-           #:go (coord 0.410 0.46 'cc)
-           (colorize (filled-rectangle 110 45) "yellow"))
+           #:go (coord 0.700 0.41 'cc)
+           (colorize (filled-rectangle 480 40) "yellow"))
  (quote-syntax
   (define-simple-macro
-    (let ([x:id e] ...)
-      body)
-     ((λ (x ...) body) e ...)))
- #'(let ([a 5])
-     a)
- #'(let ([(a b c) 5])
-     a))
+    (define/playlist header:function-header
+      body ...)
+    (define header.name
+      (λ header.args
+        (playlist body ...)))))
+  #'(define/playlist (double A)
+     A
+     A)
+ #'(define/playlist (double (A B C))
+     A))
 
 (slide
  (mk-video-tower #:render-top #f))
-
-;; ===================================================================================================
-;; Section 5: The future, editor-oriented programming
-
-(slide
- (mt "The Future..."))
 
 (let ()
   (define the-video (video:clip (build-path h "res" "demo.mp4")))
@@ -1186,9 +1172,16 @@ It aims to merge the capabilities of a traditional}|)
 (slide
  (scale (bitmap "res/vidgui2.png") 0.8))
 
+;; ===================================================================================================
+;; Section 4: The future, editor-oriented programming
+
 (slide
+ #:name "Section 4: The future, editor-oriented programming"
  (mt "Editor-Oriented")
  (mlt "Programming"))
+
+(slide
+ (mt "The Future..."))
 
 (play-n
  #:steps 40
@@ -1237,6 +1230,9 @@ It aims to merge the capabilities of a traditional}|)
 
 (slide
  (mk-video-tower))
+
+(slide
+ (freeze (scale (bitmap "res/slidesrc.png") 0.36)))
 
 (pslide
  #:go (coord 0.01 0.99 'lb)

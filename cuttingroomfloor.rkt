@@ -439,5 +439,160 @@ ffmpeg -f lavfi -i testsrc \
                #:go (coord 1/2 1/2)
                (cellophane t n2)))))
 
+(make-repl-slides
+ #'(define-macro (or a b)
+     (define tmp (gensym))
+     `(let ([,tmp ,a])
+        (if ,tmp ,tmp ,b)))
+  #'(let ([tmp #t])
+      (or #f tmp))
+ #'(begin
+     (define-macro (let asn body)
+       body)
+     (or 42 "puppy")))
+
+(staged [def use]
+        (define the-use
+          (code (first 42
+                       (let loop ()
+                         (loop)))
+                (code:comment "=> Infinite Loop")))
+        (slide
+         (scale
+          (vl-append
+           (codeblock-pict "#lang racket")
+           (code
+            (define (first x y) x)
+            code:blank
+            #,(if (at/after use) the-use (ghost the-use))))
+          1.4)))
+
+(slide
+ (scale
+  (vl-append
+   (rectify-pict (codeblock-pict "#lang lazy") "yellow")
+   (code
+    (define (first x y) x)
+    code:blank
+    (first 42
+           (let loop ()
+             (loop)))
+    (code:comment "=> 42")))
+  1.4))
+
+(let ()
+  (define rapp
+    (cc-superimpose (colorize (filled-rectangle 100 30) color-3)
+                    (code #%app)))
+  (define lapp
+    (cc-superimpose (colorize (filled-rectangle 150 30) color-2)
+                    (code lazy-app)))
+  (define napp
+    (cc-superimpose (colorize (filled-rectangle 100 30) color-1)
+                    (code #%app)))
+  (define lazy-app
+    (code
+     (define-syntax-rule (#,lapp rator rand ...)
+       (delay (#,rapp rator (delay rand) ...)))))
+  (define renamer
+    (code
+     (provide
+      (except-out (all-from-out racket/base) #,rapp)
+      (rename-out [#,lapp #,napp]))))
+  (staged [app prov]
+          (slide
+           (vl-append
+            25
+            (codeblock-pict "#lang racket")
+            (if (at/after prov) renamer (ghost renamer))
+            lazy-app))))
+
+
+(staged [f b]
+  (define bomb (bitmap (bomb-icon #:height 200
+                                  #:bomb-color "red")))
+  (define ev (hc-append (t "⇒") (st "evaluates")))
+  (slide
+   (vc-append
+    25
+    (scale (code (+ (delay 1) (delay 2))) 1.2)
+    (hc-append (t "⇒") (st "evaluates"))
+    (scale (codeblock-pict #:keep-lang-line? #f @~a{
+ #lang racket
+ (+ #<promise> (delay 2)}) 1.2)
+    (if (at/after b) ev (ghost ev))
+    (if (at/after b) bomb (ghost bomb)))))
+
+(let ()
+  (define strictify
+    (code
+     (define (strictify f)
+       (lambda args
+         (apply f (map force args))))))
+  (define str+
+    (code
+     (define lazy-+ (strictify +))))
+  (staged [s+]
+          (slide
+           (scale
+            (vl-append
+             25
+             strictify
+             (if (at/after s+) str+ (ghost str+)))
+            1.3))))
+
+(make-repl-only-slide
+ '(module foo racket
+    (define-syntax-rule (~app a b ...)
+      (lazy (#%app a (lazy b) ...)))
+    (provide (rename-out [~app #%app])))
+ '(require 'foo)
+ #:init #'(+ 1 2))
+
+(play-n
+ #:steps 20
+ #:delay 0.025
+ (λ (n)
+   (vc-append
+    25
+    (scale (code (+ 1 2)) 1.2)
+    (hc-append (t "⇒") (st "elaborates"))
+    (fade-around-pict
+     n
+     (scale
+      (cc-superimpose
+       (colorize (filled-rectangle 580 35) (light "orange"))
+       (code (delay (+ (delay 1) (delay 2)))))
+      1.2)
+     (λ (p)
+       (scale (code (force #,(scale p (/ 1 1.2)))) 1.2)))
+    (hc-append (t "⇒") (st "evaluates"))
+    (scale
+     (fade-pict n
+                (tt "#<promise>")
+                (code 3))
+     1.2))))
+
+(make-repl-only-slide
+ '(module foo racket
+    (require (for-syntax syntax/parse)
+             syntax/parse/define
+             syntax/wrap-modbeg)
+    (define-syntax #%lazy-module-begin
+      (make-wrapping-module-begin
+       #'force #'#%module-begin))
+    (define-syntax-rule (~app a b ...)
+      (lazy (#%app a (lazy b) ...)))
+    (define-syntax-rule (#%lazy-top-interaction . form)
+      (#%top-interaction . (force form)))
+    (define (lazy-+ . args)
+      (apply + (map force args)))
+    (provide (rename-out [lazy-+ +]
+                         [#%lazy-module-begin #%module-begin]
+                         [#%lazy-top-interaction #%top-interaction]
+                         [~app #%app])))
+ '(require 'foo)
+ #:init #'(+ 1 2))
 
 |#
+

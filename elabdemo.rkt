@@ -1,4 +1,4 @@
-#lang slideshow
+#lang at-exp slideshow
 
 (provide (all-defined-out))
 (require racket/gui/base
@@ -14,11 +14,14 @@
                           #:middle [middle #f]
                           . init)
   (define (make-ns)
-    (define ns (make-base-namespace))
+    (define ns (make-gui-namespace))
     (parameterize ([current-namespace ns])
       (namespace-require 'compatibility/defmacro)
       (namespace-require 'syntax/parse/define)
       (namespace-require 'racket)
+      (namespace-require 'video/base)
+      (namespace-require '(for-syntax syntax/parse))
+      (namespace-require '(for-syntax syntax/parse/lib/function-header))
       (eval (syntax->datum c)))
     ns)
   (pslide
@@ -27,19 +30,27 @@
    #:go (coord 1/2 1/2 'cc)
    (scale
     (code #,c)
-    1.4))
+    1.1))
   (when middle
     (middle))
   (for ([i (in-list init)])
     (slide
      (code #,c)
+     (blank 35)
      (apply repl-area
             #:make-namespace make-ns
             #:width 900
-            #:height 450
+            #:height 400
             (if init
                 (list (string-replace (syntax->string #`(#,i)) "\n" "\n  "))
                 (list))))))
+
+(define (make-mod-repl-slides . c)
+  (define repl-group (make-repl-group #:prompt "> "))
+  (define backing (apply make-module-backing repl-group c))
+  (slide
+   (module-area backing)
+   (result-area repl-group)))
 
 (define (make-repl-only-slide #:init [init #f]
                               . data)

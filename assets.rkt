@@ -693,7 +693,7 @@
                  #:border-width 2)
       the-code*)))))
 
-(define (mk-modbeg-slide [label "Interposition Points"])
+(define (mk-modbeg-slide [label #f])
   (define v-code
     (vc-append
      (hc-append (codeblock-pict @~a{#lang })
@@ -818,7 +818,7 @@
     #:label (t "parses")))
   (pslide
    #:go (coord 1/2 0.1 'ct)
-   (t "Interposition Points")
+   (if label (t label) (blank))
    #:go (coord 1/2 0.3 'ct)
    (pin-arrow-line
     15
@@ -853,3 +853,36 @@
              0 40 #:height 250))
     #:go (coord 1 1 'rb)
     (scale the-X 0.4))))
+
+(define eval-bomb
+  (bitmap (bomb-icon #:height 200
+                     #:bomb-color "red")))
+
+(define (mk-interpos-slide)
+  (define lang (codeblock-pict "#lang racket"))
+  (define rec-code (code (require racket)))
+  (define all-from-out (code (provide (all-from-out racket))))
+  (define only-out (code (provide (only-out racket
+                                            lambda
+                                            +))))
+  (define ~mb (cc-superimpose
+               (colorize (filled-rectangle 350 40) "cyan")
+               (code video-module-begin)))
+  (define %mb (cc-superimpose
+               (colorize (filled-rectangle 270 40) "yellow")
+               (code #%module-begin)))
+  (define r-%mb (cc-superimpose
+                 (colorize (filled-rectangle 270 40) (light "red"))
+                 (code #%module-begin)))
+  (define rename-out
+    (freeze (code (provide (rename-out [#,~mb
+                                        #,%mb])))))
+  (define def-syntax
+    (freeze (code (define-syntax-rule (#,~mb body ...)
+                      ... #,r-%mb ...))))
+  (staged [rename]
+          (slide
+           (vl-append
+            lang
+            rename-out
+            def-syntax))))
