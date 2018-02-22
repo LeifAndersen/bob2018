@@ -1234,6 +1234,16 @@ It aims to merge the capabilities of a traditional}|)
 (slide
  (freeze (scale (bitmap "res/slidesrc.png") 0.36)))
 
+(play-n
+ #:steps 20
+ #:delay 0.025
+ (λ (n)
+   (define web (freeze (scale (bitmap "res/website.png") 0.36)))
+   (define src (freeze (scale (bitmap "res/website-src.png") 0.36)))
+   (vc-append
+    (scale (tt "https://lang.video") 1.5)
+    (fade-pict n web src))))
+
 (pslide
  #:go (coord 0.01 0.99 'lb)
  (freeze (scale (bitmap "res/fear-of-macros.png") 0.4))
