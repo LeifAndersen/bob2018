@@ -559,19 +559,6 @@ The problem is that this was a conference, not just one talk. So I still had
 
 (live-demo `(playlist
              (clip "res/bbb/mosaic.mp4")
-             (clip "res/bbb/mosaic.mp4"))
-           'horizontal
-           @~a{
- #lang video
- ;; Create a mosaic of four videos
- (for/vertical ([i (in-range 2)])
-   (for/horizontal ([j (in-range 2)])
-     (external-video "branded.vid"
-       (clip "logo.png")
-       (clip (format "~aX~a.mp4" i j)))))})
-
-(live-demo `(playlist
-             (clip "res/bbb/mosaic.mp4")
              (clip "res/bbb/mosaic.mp4")
              (clip "res/bbb/mosaic.mp4"))
            'horizontal
